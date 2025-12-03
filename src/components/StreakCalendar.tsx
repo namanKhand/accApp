@@ -1,10 +1,10 @@
 import React from 'react';
-import { Calendar, DateObject } from 'react-native-calendars';
+import { Calendar, DateData } from 'react-native-calendars';
 import { StreakDay } from '../types';
 
 interface Props {
   days: StreakDay[];
-  onDayPress?: (day: DateObject) => void;
+  onDayPress?: (day: DateData) => void;
 }
 
 const StreakCalendar: React.FC<Props> = ({ days, onDayPress }) => {

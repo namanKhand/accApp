@@ -1,7 +1,8 @@
 export interface UserProfile {
   id: string;
-  phoneNumber: string;
+  email: string;
   displayName: string;
+  phoneNumber?: string;
   photoURL?: string;
   partnerId?: string;
 }

@@ -1,33 +1,58 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useApp } from '../context/AppContext';
+import LaunchScreen from '../screens/LaunchScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
-import AuthScreen from '../screens/AuthScreen';
-import MainTabs from './MainTabs';
+import LoginSignupScreen from '../screens/LoginSignupScreen';
+import CreateAccountScreen from '../screens/CreateAccountScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import GoalSetupScreen from '../screens/GoalSetupScreen';
-import PartnerInviteScreen from '../screens/PartnerInviteScreen';
+import InviteFriendScreen from '../screens/InviteFriendScreen';
+import ContactUsScreen from '../screens/ContactUsScreen';
+import MainTabs from './MainTabs';
 
 export type RootStackParamList = {
+  Launch: undefined;
   Onboarding: undefined;
-  Auth: undefined;
+  LoginSignup: undefined;
+  CreateAccount: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: undefined;
   GoalSetup: undefined;
-  PartnerInvite: { goalId: string } | undefined;
+  InviteFriend: undefined;
+  ContactUs: undefined;
   Main: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const RootNavigator = () => {
-  const { user } = useApp();
-  const initialRoute = user ? 'Main' : 'Onboarding';
+export const RootNavigator = () => {
+  const { user, loading } = useApp();
+
+  if (loading) {
+    return <LaunchScreen />;
+  }
 
   return (
-    <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-      <Stack.Screen name="Auth" component={AuthScreen} />
-      <Stack.Screen name="GoalSetup" component={GoalSetupScreen} />
-      <Stack.Screen name="PartnerInvite" component={PartnerInviteScreen} />
-      <Stack.Screen name="Main" component={MainTabs} />
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!user ? (
+        <>
+          <Stack.Screen name="Launch" component={LaunchScreen} />
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+          <Stack.Screen name="LoginSignup" component={LoginSignupScreen} />
+          <Stack.Screen name="CreateAccount" component={CreateAccountScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+        </>
+      ) : (
+        <>
+          <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Screen name="GoalSetup" component={GoalSetupScreen} />
+          <Stack.Screen name="InviteFriend" component={InviteFriendScreen} />
+          <Stack.Screen name="ContactUs" component={ContactUsScreen} />
+        </>
+      )}
     </Stack.Navigator>
   );
 };

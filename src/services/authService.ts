@@ -15,9 +15,10 @@ class MockAuthService {
 
   async signInWithPhone(phoneNumber: string, displayName: string) {
     this.user = {
-      id: randomId(),
-      phoneNumber,
-      displayName
+      id: 'u1',
+      phoneNumber: phoneNumber,
+      displayName: 'Test User',
+      email: 'test@example.com',
     };
     this.notify();
     return this.user;
