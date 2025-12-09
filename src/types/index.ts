@@ -17,6 +17,7 @@ export interface Goal {
   startDate: string;
   endDate?: string;
   streak: number;
+  longestStreak?: number;
   partnerId: string;
   status: 'active' | 'paused' | 'completed';
 }

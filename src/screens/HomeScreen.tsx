@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+```
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS } from '../constants/colors';
@@ -9,17 +10,34 @@ import * as ImagePicker from 'expo-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { getCountdown } from '../utils/dateUtils';
+import { calculateCurrentStreak, calculateLongestStreak } from '../utils/streakUtils';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeScreen = () => {
-    const { user, goals } = useApp();
+    const { user, goals, checkIns } = useApp();
     const navigation = useNavigation<NavigationProp>();
     const currentGoal = goals[goals.length - 1];
     const [checkInImage, setCheckInImage] = useState<string | null>(null);
     const [checkOutImage, setCheckOutImage] = useState<string | null>(null);
-
+    
     const countdown = currentGoal ? getCountdown(currentGoal.endDate) : null;
+    
+    // Calculate streaks from check-ins
+    const goalCheckIns = useMemo(() => 
+        currentGoal ? checkIns.filter(ci => ci.goalId === currentGoal.id) : [],
+        [checkIns, currentGoal]
+    );
+    
+    const currentStreak = useMemo(() => 
+        calculateCurrentStreak(goalCheckIns),
+        [goalCheckIns]
+    );
+    
+    const longestStreak = useMemo(() => 
+        calculateLongestStreak(goalCheckIns),
+        [goalCheckIns]
+    );
 
     const handleTakePhoto = async (isCheckOut: boolean = false) => {
         try {
@@ -72,8 +90,8 @@ const HomeScreen = () => {
                         {currentGoal ? (
                             <>
                                 I want to <Text style={styles.bold}>{currentGoal.title.replace('I want to ', '')}</Text>
-                                {currentGoal.customSchedule ? ` every ${currentGoal.customSchedule.split(',').join(' and ')}` : ''}
-                                {currentGoal.description ? `, so I can ${currentGoal.description}` : ''}.
+                                {currentGoal.customSchedule ? ` every ${ currentGoal.customSchedule.split(',').join(' and ') } ` : ''}
+                                {currentGoal.description ? `, so I can ${ currentGoal.description } ` : ''}.
                             </>
                         ) : (
                             'No goal set yet.'
@@ -87,10 +105,16 @@ const HomeScreen = () => {
                     )}
                 </View>
 
-                {/* Streak */}
-                <View style={styles.streakContainer}>
-                    <Text style={styles.streakLabel}>Current Streak:</Text>
-                    <Text style={styles.streakValue}>{currentGoal?.streak || 0} Check-Ins</Text>
+                {/* Streaks */}
+                <View style={styles.streaksRow}>
+                    <View style={styles.streakContainer}>
+                        <Text style={styles.streakLabel}>Current Streak:</Text>
+                        <Text style={styles.streakValue}>{currentStreak} days 🔥</Text>
+                    </View>
+                    <View style={styles.streakContainer}>
+                        <Text style={styles.streakLabel}>Longest Streak:</Text>
+                        <Text style={styles.streakValue}>{longestStreak} days 🏆</Text>
+                    </View>
                 </View>
 
                 {/* Check-In */}
@@ -233,24 +257,36 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginLeft: 5,
     },
-    streakContainer: {
-        backgroundColor: COLORS.surface,
-        borderRadius: 25,
-        padding: 12,
-        paddingHorizontal: 20,
+    streaksRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
         marginBottom: 15,
+        gap: 10,
+    },
+    streakContainer: {
+        flex: 1,
+        backgroundColor: COLORS.surface,
+        borderRadius: 15,
+        padding: 15,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
     },
     streakLabel: {
-        fontSize: 14,
-        fontWeight: 'bold',
+        fontSize: 12,
+        fontWeight: '600',
         color: COLORS.text,
+        marginBottom: 5,
+        textAlign: 'center',
     },
     streakValue: {
-        fontSize: 14,
-        color: COLORS.text,
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: COLORS.primary,
+        textAlign: 'center',
     },
     actionCard: {
         backgroundColor: COLORS.surface,
