@@ -18,6 +18,12 @@ const STATS = {
     avgResponseTime: '< 2 hours'
 };
 
+// Celebrity motivational quote
+const QUOTE = {
+    text: "Accountability breeds response-ability.",
+    author: "Stephen Covey"
+};
+
 const SLIDES = [
     {
         id: '1',
@@ -34,6 +40,7 @@ const SLIDES = [
         id: '3',
         title: 'Choose someone to keep you accountable!',
         icon: 'account-group',
+        showQuote: true,
     },
     {
         id: '4',
@@ -90,6 +97,14 @@ const OnboardingScreen = () => {
                         <Text style={styles.statValue}>{STATS.avgResponseTime}</Text>
                         <Text style={styles.statLabel}>Partner Response</Text>
                     </View>
+                </View>
+            )}
+
+            {item.showQuote && (
+                <View style={styles.quoteContainer}>
+                    <MaterialCommunityIcons name="format-quote-open" size={24} color={COLORS.primary} />
+                    <Text style={styles.quoteText}>{QUOTE.text}</Text>
+                    <Text style={styles.quoteAuthor}>— {QUOTE.author}</Text>
                 </View>
             )}
         </View>
@@ -228,6 +243,33 @@ const styles = StyleSheet.create({
         fontSize: 11,
         color: COLORS.text,
         textAlign: 'center',
+    },
+    quoteContainer: {
+        backgroundColor: COLORS.surface,
+        padding: 20,
+        borderRadius: 15,
+        marginTop: 20,
+        width: '90%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    quoteText: {
+        fontSize: 18,
+        fontStyle: 'italic',
+        color: COLORS.text,
+        textAlign: 'center',
+        marginVertical: 10,
+        lineHeight: 26,
+    },
+    quoteAuthor: {
+        fontSize: 14,
+        color: COLORS.primary,
+        textAlign: 'right',
+        fontWeight: 'bold',
+        marginTop: 5,
     },
     footer: {
         padding: 20,
