@@ -387,8 +387,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     disabledButton: {
-        backgroundColor: COLORS.primary,
-        opacity: 0.6,
+        backgroundColor: COLORS.secondary,
+        opacity: 0.5,
     },
     actionButtonText: {
         color: COLORS.surface,
