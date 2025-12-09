@@ -89,34 +89,54 @@ const HomeScreen = () => {
                 quality: 0.5,
             });
 
-            if (!result.canceled && currentGoal && user) {
-                const checkOutTimestamp = new Date().toISOString();
-                setCheckOutImage(result.assets[0].uri);
-                setCheckOutTime(checkOutTimestamp);
+            if (result.canceled) {
+                console.log('User canceled photo');
+                return;
+            }
 
-                // Save check-in record with both photos and timestamps
-                await recordCheckIn({
-                    userId: user.id,
-                    goalId: currentGoal.id,
-                    date: new Date().toISOString(),
-                    checkInAt: checkInTime,
-                    checkOutAt: checkOutTimestamp,
-                    photoUri: checkInImage,
-                    checkOutPhotoUri: result.assets[0].uri,
-                    verifiedByPartner: false,
-                });
+            if (!result.assets || result.assets.length === 0) {
+                Alert.alert('Error', 'No photo was captured');
+                return;
+            }
 
-                Alert.alert('Success', 'Check-out complete! Great job today!');
+            const checkOutTimestamp = new Date().toISOString();
+            const photoUri = result.assets[0].uri;
 
-                // Reset for next check-in
-                setCheckInImage(null);
-                setCheckOutImage(null);
-                setCheckInTime(null);
-                setCheckOutTime(null);
+            // Set the photo and time immediately so user sees it
+            setCheckOutImage(photoUri);
+            setCheckOutTime(checkOutTimestamp);
+
+            // Save check-in record with both photos and timestamps
+            if (currentGoal && user) {
+                try {
+                    await recordCheckIn({
+                        userId: user.id,
+                        goalId: currentGoal.id,
+                        date: new Date().toISOString(),
+                        checkInAt: checkInTime,
+                        checkOutAt: checkOutTimestamp,
+                        photoUri: checkInImage,
+                        checkOutPhotoUri: photoUri,
+                        verifiedByPartner: false,
+                    });
+
+                    Alert.alert('Success', 'Check-out complete! Great job today!');
+
+                    // Reset for next check-in
+                    setTimeout(() => {
+                        setCheckInImage(null);
+                        setCheckOutImage(null);
+                        setCheckInTime(null);
+                        setCheckOutTime(null);
+                    }, 2000); // Give user time to see the success message
+                } catch (saveError) {
+                    console.error('Error saving check-in:', saveError);
+                    Alert.alert('Warning', 'Photo captured but failed to save. Please try again.');
+                }
             }
         } catch (error) {
+            console.error('Check-out error:', error);
             Alert.alert('Error', 'An error occurred while checking out.');
-            console.error(error);
         }
     };
 
