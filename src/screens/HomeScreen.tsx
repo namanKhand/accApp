@@ -1,4 +1,3 @@
-```
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -20,21 +19,21 @@ const HomeScreen = () => {
     const currentGoal = goals[goals.length - 1];
     const [checkInImage, setCheckInImage] = useState<string | null>(null);
     const [checkOutImage, setCheckOutImage] = useState<string | null>(null);
-    
+
     const countdown = currentGoal ? getCountdown(currentGoal.endDate) : null;
-    
+
     // Calculate streaks from check-ins
-    const goalCheckIns = useMemo(() => 
+    const goalCheckIns = useMemo(() =>
         currentGoal ? checkIns.filter(ci => ci.goalId === currentGoal.id) : [],
         [checkIns, currentGoal]
     );
-    
-    const currentStreak = useMemo(() => 
+
+    const currentStreak = useMemo(() =>
         calculateCurrentStreak(goalCheckIns),
         [goalCheckIns]
     );
-    
-    const longestStreak = useMemo(() => 
+
+    const longestStreak = useMemo(() =>
         calculateLongestStreak(goalCheckIns),
         [goalCheckIns]
     );
@@ -90,8 +89,8 @@ const HomeScreen = () => {
                         {currentGoal ? (
                             <>
                                 I want to <Text style={styles.bold}>{currentGoal.title.replace('I want to ', '')}</Text>
-                                {currentGoal.customSchedule ? ` every ${ currentGoal.customSchedule.split(',').join(' and ') } ` : ''}
-                                {currentGoal.description ? `, so I can ${ currentGoal.description } ` : ''}.
+                                {currentGoal.customSchedule ? ` every ${currentGoal.customSchedule.split(',').join(' and ')} ` : ''}
+                                {currentGoal.description ? `, so I can ${currentGoal.description} ` : ''}.
                             </>
                         ) : (
                             'No goal set yet.'
