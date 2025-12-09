@@ -14,11 +14,13 @@ import { calculateCurrentStreak, calculateLongestStreak } from '../utils/streakU
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeScreen = () => {
-    const { user, goals, checkIns } = useApp();
+    const { user, goals, checkIns, recordCheckIn } = useApp();
     const navigation = useNavigation<NavigationProp>();
     const currentGoal = goals[goals.length - 1];
     const [checkInImage, setCheckInImage] = useState<string | null>(null);
     const [checkOutImage, setCheckOutImage] = useState<string | null>(null);
+    const [checkInTime, setCheckInTime] = useState<string | null>(null);
+    const [checkOutTime, setCheckOutTime] = useState<string | null>(null);
 
     const countdown = currentGoal ? getCountdown(currentGoal.endDate) : null;
 
@@ -38,7 +40,7 @@ const HomeScreen = () => {
         [goalCheckIns]
     );
 
-    const handleTakePhoto = async (isCheckOut: boolean = false) => {
+    const handleCheckIn = async () => {
         try {
             const { status } = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -55,16 +57,65 @@ const HomeScreen = () => {
             });
 
             if (!result.canceled) {
-                if (isCheckOut) {
-                    setCheckOutImage(result.assets[0].uri);
-                    Alert.alert('Success', 'Check-out complete! Great job today!');
-                } else {
-                    setCheckInImage(result.assets[0].uri);
-                    Alert.alert('Success', 'Check-in complete! Go crush your goal!');
-                }
+                const timestamp = new Date().toISOString();
+                setCheckInImage(result.assets[0].uri);
+                setCheckInTime(timestamp);
+                Alert.alert('Success', 'Check-in complete! Go crush your goal!');
             }
         } catch (error) {
             Alert.alert('Error', 'An error occurred while taking the photo.');
+            console.error(error);
+        }
+    };
+
+    const handleCheckOut = async () => {
+        if (!checkInImage || !checkInTime) {
+            Alert.alert('Error', 'Please check in first!');
+            return;
+        }
+
+        try {
+            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+
+            if (status !== 'granted') {
+                Alert.alert('Permission Denied', 'Sorry, we need camera permissions to make this work!');
+                return;
+            }
+
+            const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 0.5,
+            });
+
+            if (!result.canceled && currentGoal && user) {
+                const checkOutTimestamp = new Date().toISOString();
+                setCheckOutImage(result.assets[0].uri);
+                setCheckOutTime(checkOutTimestamp);
+
+                // Save check-in record with both photos and timestamps
+                await recordCheckIn({
+                    userId: user.id,
+                    goalId: currentGoal.id,
+                    date: new Date().toISOString(),
+                    checkInAt: checkInTime,
+                    checkOutAt: checkOutTimestamp,
+                    photoUri: checkInImage,
+                    checkOutPhotoUri: result.assets[0].uri,
+                    verifiedByPartner: false,
+                });
+
+                Alert.alert('Success', 'Check-out complete! Great job today!');
+
+                // Reset for next check-in
+                setCheckInImage(null);
+                setCheckOutImage(null);
+                setCheckInTime(null);
+                setCheckOutTime(null);
+            }
+        } catch (error) {
+            Alert.alert('Error', 'An error occurred while checking out.');
             console.error(error);
         }
     };
@@ -126,7 +177,12 @@ const HomeScreen = () => {
                             <MaterialCommunityIcons name="camera-outline" size={50} color={COLORS.text} />
                         )}
                     </View>
-                    <TouchableOpacity style={styles.actionButton} onPress={() => handleTakePhoto(false)}>
+                    {checkInTime && (
+                        <Text style={styles.timestampText}>
+                            {new Date(checkInTime).toLocaleTimeString()}
+                        </Text>
+                    )}
+                    <TouchableOpacity style={styles.actionButton} onPress={handleCheckIn}>
                         <Text style={styles.actionButtonText}>{checkInImage ? 'Retake Photo' : 'Take Photo'}</Text>
                     </TouchableOpacity>
                 </View>
@@ -141,9 +197,14 @@ const HomeScreen = () => {
                             <MaterialCommunityIcons name="camera-off-outline" size={50} color={COLORS.text} />
                         )}
                     </View>
+                    {checkOutTime && (
+                        <Text style={styles.timestampText}>
+                            {new Date(checkOutTime).toLocaleTimeString()}
+                        </Text>
+                    )}
                     <TouchableOpacity
                         style={[styles.actionButton, !checkInImage && styles.disabledButton]}
-                        onPress={() => handleTakePhoto(true)}
+                        onPress={handleCheckOut}
                         disabled={!checkInImage}
                     >
                         <Text style={styles.actionButtonText}>{checkOutImage ? 'Retake Photo' : 'Check-Out'}</Text>
@@ -311,6 +372,11 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 10,
+    },
+    timestampText: {
+        fontSize: 12,
+        color: COLORS.text,
+        marginBottom: 10,
     },
     actionButton: {
         backgroundColor: COLORS.primary,

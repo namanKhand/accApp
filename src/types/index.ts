@@ -27,7 +27,10 @@ export interface CheckIn {
   userId: string;
   goalId: string;
   date: string;
-  photoUri?: string;
+  checkInAt: string; // ISO timestamp
+  checkOutAt?: string; // ISO timestamp
+  photoUri?: string; // Check-in photo
+  checkOutPhotoUri?: string; // Check-out photo
   notes?: string;
   verifiedByPartner: boolean;
 }
