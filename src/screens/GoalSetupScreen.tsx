@@ -175,6 +175,7 @@ const GoalSetupScreen = () => {
                         <View style={styles.calendarContainer}>
                             <Calendar
                                 onDayPress={(day: any) => setDeadline(day.dateString)}
+                                minDate={new Date().toISOString().split('T')[0]}
                                 markedDates={{
                                     [deadline]: { selected: true, disableTouchEvent: true, selectedColor: COLORS.primary }
                                 }}

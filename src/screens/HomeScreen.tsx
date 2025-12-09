@@ -8,6 +8,7 @@ import { useApp } from '../context/AppContext';
 import * as ImagePicker from 'expo-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
+import { getCountdown } from '../utils/dateUtils';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -17,6 +18,8 @@ const HomeScreen = () => {
     const currentGoal = goals[goals.length - 1];
     const [checkInImage, setCheckInImage] = useState<string | null>(null);
     const [checkOutImage, setCheckOutImage] = useState<string | null>(null);
+
+    const countdown = currentGoal ? getCountdown(currentGoal.endDate) : null;
 
     const handleTakePhoto = async (isCheckOut: boolean = false) => {
         try {
@@ -76,6 +79,12 @@ const HomeScreen = () => {
                             'No goal set yet.'
                         )}
                     </Text>
+                    {countdown && (
+                        <View style={styles.countdownContainer}>
+                            <MaterialCommunityIcons name="clock-outline" size={16} color={COLORS.primary} />
+                            <Text style={styles.countdownText}>{countdown}</Text>
+                        </View>
+                    )}
                 </View>
 
                 {/* Streak */}
@@ -208,6 +217,21 @@ const styles = StyleSheet.create({
     },
     bold: {
         fontWeight: 'bold',
+    },
+    countdownContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 10,
+        paddingTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: COLORS.secondary + '40',
+    },
+    countdownText: {
+        fontSize: 14,
+        color: COLORS.primary,
+        fontWeight: 'bold',
+        marginLeft: 5,
     },
     streakContainer: {
         backgroundColor: COLORS.surface,
