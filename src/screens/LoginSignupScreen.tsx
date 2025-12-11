@@ -7,20 +7,24 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
+import { authService } from '../services/authService';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'LoginSignup'>;
 
 const LoginSignupScreen = () => {
     const navigation = useNavigation<NavigationProp>();
-    const { setUser } = useApp(); // Temporary for simulating login
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleLogin = () => {
-        // Simulate login for now
+    const handleLogin = async () => {
         if (email && password) {
-            setUser({ id: '1', displayName: 'User', email: email, photoURL: undefined });
-            navigation.replace('Main');
+            try {
+                await authService.signIn(email, password);
+                // Navigation handled by RootNavigator via onAuthStateChanged
+            } catch (error: any) {
+                console.error('Login failed:', error);
+                alert('Login failed: ' + error.message);
+            }
         }
     };
 

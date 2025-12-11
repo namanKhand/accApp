@@ -7,23 +7,32 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
+import { authService } from '../services/authService';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateAccount'>;
 
 const CreateAccountScreen = () => {
     const navigation = useNavigation<NavigationProp>();
-    const { setUser } = useApp();
+    // const { setUser } = useApp(); // Removed, using authService directly
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [agreed, setAgreed] = useState(false);
 
-    const handleSignUp = () => {
+    const handleSignUp = async () => {
         if (fullName && email && password && confirmPassword && agreed) {
-            // Simulate sign up
-            setUser({ id: '1', displayName: fullName, email: email, photoURL: undefined });
-            navigation.replace('GoalSetup');
+            if (password !== confirmPassword) {
+                alert("Passwords don't match");
+                return;
+            }
+            try {
+                await authService.signUp(email, password, fullName);
+                // Navigation handled by RootNavigator via onAuthStateChanged
+            } catch (error: any) {
+                console.error('Sign up failed:', error);
+                alert('Sign up failed: ' + error.message);
+            }
         }
     };
 

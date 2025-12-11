@@ -1,15 +1,21 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from './firebase';
 import { CheckIn } from '../types';
-import { randomId } from '../utils/ids';
-
-const CHECKINS_KEY = 'acc_app_checkins';
 
 class CheckInService {
+  private collectionName = 'checkins';
+
   async getCheckIns(userId: string): Promise<CheckIn[]> {
     try {
-      const jsonValue = await AsyncStorage.getItem(CHECKINS_KEY);
-      const checkIns: CheckIn[] = jsonValue != null ? JSON.parse(jsonValue) : [];
-      return checkIns.filter((checkIn) => checkIn.userId === userId);
+      const snapshot = await db.collection(this.collectionName)
+        .where('userId', '==', userId)
+        .get();
+
+      const checkIns: CheckIn[] = [];
+      snapshot.forEach((doc: any) => {
+        checkIns.push({ id: doc.id, ...doc.data() } as CheckIn);
+      });
+
+      return checkIns;
     } catch (e) {
       console.error('Error fetching checkins', e);
       return [];
@@ -18,18 +24,11 @@ class CheckInService {
 
   async createCheckIn(checkIn: Omit<CheckIn, 'id'>) {
     try {
-      const checkIns = await this.getAllCheckIns();
-      const entry: CheckIn = { ...checkIn, id: randomId() };
-      checkIns.push(entry);
-      await AsyncStorage.setItem(CHECKINS_KEY, JSON.stringify(checkIns));
+      await db.collection(this.collectionName).add(checkIn);
     } catch (e) {
       console.error('Error creating checkin', e);
+      throw e;
     }
-  }
-
-  private async getAllCheckIns(): Promise<CheckIn[]> {
-    const jsonValue = await AsyncStorage.getItem(CHECKINS_KEY);
-    return jsonValue != null ? JSON.parse(jsonValue) : [];
   }
 }
 

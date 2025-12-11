@@ -1,20 +1,50 @@
+import { db } from './firebase';
 import { Nudge } from '../types';
-import { randomId } from '../utils/ids';
 
 class NudgeService {
-  private nudges: Nudge[] = [];
+  private collectionName = 'nudges';
 
   async getNudges(userId: string) {
-    return this.nudges.filter((nudge) => nudge.recipientId === userId || nudge.senderId === userId);
+    try {
+      // Fetch nudges where user is recipient OR sender
+      const recipientSnapshot = await db.collection(this.collectionName)
+        .where('recipientId', '==', userId)
+        .get();
+
+      const senderSnapshot = await db.collection(this.collectionName)
+        .where('senderId', '==', userId)
+        .get();
+
+      // Combine both results
+      const nudges: Nudge[] = [];
+      recipientSnapshot.forEach((doc: any) => {
+        nudges.push({ id: doc.id, ...doc.data() } as Nudge);
+      });
+      senderSnapshot.forEach((doc: any) => {
+        // Avoid duplicates
+        if (!nudges.find(n => n.id === doc.id)) {
+          nudges.push({ id: doc.id, ...doc.data() } as Nudge);
+        }
+      });
+
+      return nudges;
+    } catch (e) {
+      console.error('Error fetching nudges', e);
+      return [];
+    }
   }
 
   async createNudge(nudge: Omit<Nudge, 'id' | 'createdAt'>) {
-    const entry: Nudge = {
-      ...nudge,
-      id: randomId(),
-      createdAt: new Date().toISOString()
-    };
-    this.nudges.push(entry);
+    try {
+      const nudgeData = {
+        ...nudge,
+        createdAt: new Date().toISOString()
+      };
+      await db.collection(this.collectionName).add(nudgeData);
+    } catch (e) {
+      console.error('Error creating nudge', e);
+      throw e;
+    }
   }
 }
 

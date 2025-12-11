@@ -13,7 +13,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'GoalSetup'>
 
 const GoalSetupScreen = () => {
     const navigation = useNavigation<NavigationProp>();
-    const { addGoal } = useApp();
+    const { addGoal, user } = useApp();
     const [step, setStep] = useState(0);
 
     // Goal State
@@ -33,9 +33,11 @@ const GoalSetupScreen = () => {
 
     const handleFinish = async () => {
         // Create goal object
+        if (!user) return;
+
         await addGoal({
-            id: Math.random().toString(),
-            ownerId: '1',
+            id: Math.random().toString(), // Will be ignored by service
+            ownerId: user.id,
             title: `I want to ${action}`,
             description: motivation,
             cadence: 'custom',

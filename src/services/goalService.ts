@@ -1,15 +1,33 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from './firebase';
 import { Goal } from '../types';
-import { randomId } from '../utils/ids';
-
-const GOALS_KEY = 'acc_app_goals';
 
 class GoalService {
+  private collectionName = 'goals';
+
   async getGoals(userId: string): Promise<Goal[]> {
     try {
-      const jsonValue = await AsyncStorage.getItem(GOALS_KEY);
-      const goals: Goal[] = jsonValue != null ? JSON.parse(jsonValue) : [];
-      return goals.filter((goal) => goal.ownerId === userId || goal.partnerId === userId);
+      // Fetch goals where user is owner OR partner
+      const snapshot = await db.collection(this.collectionName)
+        .where('ownerId', '==', userId)
+        .get();
+
+      const partnerSnapshot = await db.collection(this.collectionName)
+        .where('partnerId', '==', userId)
+        .get();
+
+      // Combine both results
+      const goals: Goal[] = [];
+      snapshot.forEach(doc => {
+        goals.push({ id: doc.id, ...doc.data() } as Goal);
+      });
+      partnerSnapshot.forEach(doc => {
+        // Avoid duplicates
+        if (!goals.find(g => g.id === doc.id)) {
+          goals.push({ id: doc.id, ...doc.data() } as Goal);
+        }
+      });
+
+      return goals;
     } catch (e) {
       console.error('Error fetching goals', e);
       return [];
@@ -18,28 +36,22 @@ class GoalService {
 
   async createGoal(goal: Goal) {
     try {
-      const goals = await this.getAllGoals();
-      const newGoal = goal.id ? goal : { ...goal, id: randomId() };
-      goals.push(newGoal);
-      await AsyncStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+      // Remove id if it exists, let Firestore generate it
+      const { id, ...goalData } = goal;
+      await db.collection(this.collectionName).add(goalData);
     } catch (e) {
       console.error('Error creating goal', e);
+      throw e;
     }
   }
 
   async updateGoal(goalId: string, updates: Partial<Goal>) {
     try {
-      const goals = await this.getAllGoals();
-      const updatedGoals = goals.map((goal) => (goal.id === goalId ? { ...goal, ...updates } : goal));
-      await AsyncStorage.setItem(GOALS_KEY, JSON.stringify(updatedGoals));
+      await db.collection(this.collectionName).doc(goalId).update(updates);
     } catch (e) {
       console.error('Error updating goal', e);
+      throw e;
     }
-  }
-
-  private async getAllGoals(): Promise<Goal[]> {
-    const jsonValue = await AsyncStorage.getItem(GOALS_KEY);
-    return jsonValue != null ? JSON.parse(jsonValue) : [];
   }
 }
 

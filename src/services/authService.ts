@@ -1,37 +1,40 @@
+import { auth } from './firebase';
 import { UserProfile } from '../types';
-import { randomId } from '../utils/ids';
 
-class MockAuthService {
-  private user: UserProfile | null = null;
-  private listeners: Array<(user: UserProfile | null) => void> = [];
-
+class AuthService {
   onAuthStateChanged(callback: (user: UserProfile | null) => void) {
-    this.listeners.push(callback);
-    callback(this.user);
-    return () => {
-      this.listeners = this.listeners.filter((fn) => fn !== callback);
-    };
+    return auth.onAuthStateChanged((firebaseUser) => {
+      if (firebaseUser) {
+        const userProfile: UserProfile = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          displayName: firebaseUser.displayName || 'User',
+          photoURL: firebaseUser.photoURL || undefined,
+          phoneNumber: firebaseUser.phoneNumber || undefined,
+        };
+        callback(userProfile);
+      } else {
+        callback(null);
+      }
+    });
   }
 
-  async signInWithPhone(phoneNumber: string, displayName: string) {
-    this.user = {
-      id: 'u1',
-      phoneNumber: phoneNumber,
-      displayName: 'Test User',
-      email: 'test@example.com',
-    };
-    this.notify();
-    return this.user;
+  async signIn(email: string, pass: string) {
+    const userCredential = await auth.signInWithEmailAndPassword(email, pass);
+    return userCredential.user;
+  }
+
+  async signUp(email: string, pass: string, displayName: string) {
+    const userCredential = await auth.createUserWithEmailAndPassword(email, pass);
+    if (userCredential.user) {
+      await userCredential.user.updateProfile({ displayName });
+    }
+    return userCredential.user;
   }
 
   async signOut() {
-    this.user = null;
-    this.notify();
-  }
-
-  private notify() {
-    this.listeners.forEach((cb) => cb(this.user));
+    await auth.signOut();
   }
 }
 
-export const authService = new MockAuthService();
+export const authService = new AuthService();

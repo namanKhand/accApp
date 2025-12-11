@@ -27,14 +27,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [nudges, setNudges] = useState<Nudge[]>([]);
 
-  const refreshData = async () => {
-    if (!user) return;
+  const refreshData = async (userId?: string) => {
+    const targetId = userId || user?.id;
+    if (!targetId) return;
+
     setLoading(true);
     try {
       const [goalData, checkInData, nudgeData] = await Promise.all([
-        goalService.getGoals(user.id),
-        checkInService.getCheckIns(user.id),
-        nudgeService.getNudges(user.id)
+        goalService.getGoals(targetId),
+        checkInService.getCheckIns(targetId),
+        nudgeService.getNudges(targetId)
       ]);
       setGoals(goalData);
       setCheckIns(checkInData);
@@ -63,7 +65,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const unsubscribe = authService.onAuthStateChanged(async (profile) => {
       setUser(profile);
       if (profile) {
-        await refreshData();
+        await refreshData(profile.id);
       } else {
         setGoals([]);
         setCheckIns([]);
