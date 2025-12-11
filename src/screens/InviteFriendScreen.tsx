@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../constants/colors';
@@ -15,6 +15,7 @@ const InviteFriendScreen = () => {
     const { user, goals } = useApp();
     const [step, setStep] = useState(0);
     const [friendName, setFriendName] = useState('');
+    const [friendPhone, setFriendPhone] = useState('');
     const [friendEmail, setFriendEmail] = useState('');
 
     const currentGoal = goals[goals.length - 1]; // Assuming the last created goal is the current one
@@ -38,6 +39,24 @@ const InviteFriendScreen = () => {
                             placeholderTextColor={COLORS.secondary}
                             value={friendName}
                             onChangeText={setFriendName}
+                            returnKeyType="done"
+                            blurOnSubmit={true}
+                            onSubmitEditing={() => Keyboard.dismiss()}
+                        />
+                    </View>
+
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.label}>Friend's Phone Number (optional)</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="(123) 456-7890"
+                            placeholderTextColor={COLORS.secondary}
+                            value={friendPhone}
+                            onChangeText={setFriendPhone}
+                            keyboardType="phone-pad"
+                            returnKeyType="done"
+                            blurOnSubmit={true}
+                            onSubmitEditing={() => Keyboard.dismiss()}
                         />
                     </View>
 
@@ -51,6 +70,9 @@ const InviteFriendScreen = () => {
                             onChangeText={setFriendEmail}
                             keyboardType="email-address"
                             autoCapitalize="none"
+                            returnKeyType="done"
+                            blurOnSubmit={true}
+                            onSubmitEditing={() => Keyboard.dismiss()}
                         />
                     </View>
 

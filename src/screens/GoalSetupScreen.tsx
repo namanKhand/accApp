@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../constants/colors';
@@ -94,6 +94,9 @@ const GoalSetupScreen = () => {
                                 value={action}
                                 onChangeText={setAction}
                                 multiline
+                                returnKeyType="done"
+                                blurOnSubmit={true}
+                                onSubmitEditing={() => Keyboard.dismiss()}
                             />
                         </View>
                         <TouchableOpacity style={styles.button} onPress={handleNext}>
@@ -153,6 +156,9 @@ const GoalSetupScreen = () => {
                                 value={motivation}
                                 onChangeText={setMotivation}
                                 multiline
+                                returnKeyType="done"
+                                blurOnSubmit={true}
+                                onSubmitEditing={() => Keyboard.dismiss()}
                             />
                         </View>
                         <TouchableOpacity style={styles.button} onPress={handleNext}>
