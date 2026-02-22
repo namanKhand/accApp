@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "One-Liner",
-    "slug": "one-liner",
-    "scheme": "oneliner",
-    "version": "0.1.0",
+    "name": "do2gether",
+    "slug": "do2gether",
+    "scheme": "do2gether",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,13 +13,15 @@
       "backgroundColor": "#FAF5EF"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.acc.2gether"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FAF5EF"
-      }
+      },
+      "package": "com.acc.2gether"
     },
     "web": {
       "bundler": "metro",
