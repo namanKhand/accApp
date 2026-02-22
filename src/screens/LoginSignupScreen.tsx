@@ -1,26 +1,45 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import {
+    View, Text, StyleSheet, TextInput, TouchableOpacity,
+    ScrollView, ActivityIndicator, Alert,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../constants/colors';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useApp } from '../context/AppContext';
+import { authService } from '../services/authService';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'LoginSignup'>;
 
 const LoginSignupScreen = () => {
     const navigation = useNavigation<NavigationProp>();
-    const { setUser } = useApp(); // Temporary for simulating login
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleLogin = () => {
-        // Simulate login for now
-        if (email && password) {
-            setUser({ id: '1', displayName: 'User', email: email, photoURL: undefined });
+    const handleLogin = async () => {
+        if (!email.trim() || !password) {
+            Alert.alert('Missing fields', 'Please enter your email and password.');
+            return;
+        }
+        setLoading(true);
+        try {
+            await authService.signIn(email.trim(), password);
+            // onAuthStateChanged in AppContext will fire automatically and
+            // the navigator will redirect to Main.
             navigation.replace('Main');
+        } catch (error: any) {
+            const message =
+                error.code === 'auth/user-not-found' ? 'No account found with this email.' :
+                    error.code === 'auth/wrong-password' ? 'Incorrect password. Please try again.' :
+                        error.code === 'auth/invalid-email' ? 'Please enter a valid email address.' :
+                            error.code === 'auth/too-many-requests' ? 'Too many attempts. Please try again later.' :
+                                'Login failed. Please try again.';
+            Alert.alert('Login Error', message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -40,6 +59,7 @@ const LoginSignupScreen = () => {
                             onChangeText={setEmail}
                             autoCapitalize="none"
                             keyboardType="email-address"
+                            autoCorrect={false}
                         />
                     </View>
 
@@ -58,8 +78,16 @@ const LoginSignupScreen = () => {
                         </TouchableOpacity>
                     </View>
 
-                    <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                        <Text style={styles.loginButtonText}>Log In</Text>
+                    <TouchableOpacity
+                        style={[styles.loginButton, loading && styles.disabledButton]}
+                        onPress={handleLogin}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color={COLORS.surface} />
+                        ) : (
+                            <Text style={styles.loginButtonText}>Log In</Text>
+                        )}
                     </TouchableOpacity>
 
                     <Text style={styles.orText}>or sign in with</Text>
@@ -75,7 +103,10 @@ const LoginSignupScreen = () => {
 
                     <View style={styles.footer}>
                         <Text style={styles.footerText}>Don't have an account?</Text>
-                        <TouchableOpacity style={styles.signUpButton} onPress={() => navigation.navigate('CreateAccount')}>
+                        <TouchableOpacity
+                            style={styles.signUpButton}
+                            onPress={() => navigation.navigate('CreateAccount')}
+                        >
                             <Text style={styles.signUpButtonText}>Sign Up</Text>
                         </TouchableOpacity>
                     </View>
@@ -86,36 +117,12 @@ const LoginSignupScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.background,
-    },
-    scrollContent: {
-        flexGrow: 1,
-        padding: 20,
-        justifyContent: 'center',
-    },
-    card: {
-        backgroundColor: COLORS.background, // Or surface if card style desired, but design looks like background
-        alignItems: 'center',
-        width: '100%',
-    },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: COLORS.text,
-        marginBottom: 30,
-    },
-    inputContainer: {
-        width: '100%',
-        marginBottom: 20,
-    },
-    label: {
-        fontSize: 16,
-        color: COLORS.text,
-        marginBottom: 8,
-        fontWeight: '500',
-    },
+    container: { flex: 1, backgroundColor: COLORS.background },
+    scrollContent: { flexGrow: 1, padding: 20, justifyContent: 'center' },
+    card: { backgroundColor: COLORS.background, alignItems: 'center', width: '100%' },
+    headerTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.text, marginBottom: 30 },
+    inputContainer: { width: '100%', marginBottom: 20 },
+    label: { fontSize: 16, color: COLORS.text, marginBottom: 8, fontWeight: '500' },
     input: {
         backgroundColor: COLORS.surface,
         borderRadius: 10,
@@ -128,12 +135,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 2,
     },
-    forgotPassword: {
-        color: COLORS.text,
-        fontSize: 12,
-        textAlign: 'right',
-        marginTop: 8,
-    },
+    forgotPassword: { color: COLORS.text, fontSize: 12, textAlign: 'right', marginTop: 8 },
     loginButton: {
         backgroundColor: COLORS.primary,
         paddingVertical: 12,
@@ -141,20 +143,13 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginTop: 10,
         marginBottom: 20,
+        minWidth: 140,
+        alignItems: 'center',
     },
-    loginButtonText: {
-        color: COLORS.surface,
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    orText: {
-        color: COLORS.text,
-        marginBottom: 15,
-    },
-    socialContainer: {
-        flexDirection: 'row',
-        marginBottom: 40,
-    },
+    disabledButton: { opacity: 0.6 },
+    loginButtonText: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },
+    orText: { color: COLORS.text, marginBottom: 15 },
+    socialContainer: { flexDirection: 'row', marginBottom: 40 },
     socialButton: {
         backgroundColor: COLORS.surface,
         width: 50,
@@ -169,23 +164,15 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 2,
     },
-    footer: {
-        alignItems: 'center',
-    },
-    footerText: {
-        color: COLORS.text,
-        marginBottom: 10,
-    },
+    footer: { alignItems: 'center' },
+    footerText: { color: COLORS.text, marginBottom: 10 },
     signUpButton: {
         backgroundColor: COLORS.primary,
         paddingVertical: 10,
         paddingHorizontal: 30,
         borderRadius: 8,
     },
-    signUpButtonText: {
-        color: COLORS.surface,
-        fontWeight: 'bold',
-    },
+    signUpButtonText: { color: COLORS.surface, fontWeight: 'bold' },
 });
 
 export default LoginSignupScreen;

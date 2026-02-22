@@ -1,29 +1,59 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import {
+    View, Text, StyleSheet, TextInput, TouchableOpacity,
+    ScrollView, ActivityIndicator, Alert,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../constants/colors';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useApp } from '../context/AppContext';
+import { authService } from '../services/authService';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateAccount'>;
 
 const CreateAccountScreen = () => {
     const navigation = useNavigation<NavigationProp>();
-    const { setUser } = useApp();
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [agreed, setAgreed] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const handleSignUp = () => {
-        if (fullName && email && password && confirmPassword && agreed) {
-            // Simulate sign up
-            setUser({ id: '1', displayName: fullName, email: email, photoURL: undefined });
+    const handleSignUp = async () => {
+        if (!fullName.trim() || !email.trim() || !password || !confirmPassword) {
+            Alert.alert('Missing fields', 'Please fill in all fields.');
+            return;
+        }
+        if (password !== confirmPassword) {
+            Alert.alert('Password mismatch', 'Passwords do not match.');
+            return;
+        }
+        if (password.length < 6) {
+            Alert.alert('Weak password', 'Password must be at least 6 characters.');
+            return;
+        }
+        if (!agreed) {
+            Alert.alert('Terms required', 'Please agree to the Terms of Use and Privacy Policy.');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await authService.signUp(email.trim(), password, fullName.trim());
+            // onAuthStateChanged in AppContext fires automatically
             navigation.replace('GoalSetup');
+        } catch (error: any) {
+            const message =
+                error.code === 'auth/email-already-in-use' ? 'An account with this email already exists.' :
+                    error.code === 'auth/invalid-email' ? 'Please enter a valid email address.' :
+                        error.code === 'auth/weak-password' ? 'Password must be at least 6 characters.' :
+                            'Sign up failed. Please try again.';
+            Alert.alert('Sign Up Error', message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -60,6 +90,7 @@ const CreateAccountScreen = () => {
                             onChangeText={setEmail}
                             autoCapitalize="none"
                             keyboardType="email-address"
+                            autoCorrect={false}
                         />
                     </View>
 
@@ -67,7 +98,7 @@ const CreateAccountScreen = () => {
                         <Text style={styles.label}>Password</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="**********"
+                            placeholder="At least 6 characters"
                             placeholderTextColor={COLORS.secondary}
                             value={password}
                             onChangeText={setPassword}
@@ -89,7 +120,7 @@ const CreateAccountScreen = () => {
 
                     <TouchableOpacity style={styles.checkboxContainer} onPress={() => setAgreed(!agreed)}>
                         <MaterialCommunityIcons
-                            name={agreed ? "checkbox-marked" : "checkbox-blank-outline"}
+                            name={agreed ? 'checkbox-marked' : 'checkbox-blank-outline'}
                             size={24}
                             color={COLORS.text}
                         />
@@ -98,8 +129,16 @@ const CreateAccountScreen = () => {
                         </Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
-                        <Text style={styles.signUpButtonText}>Sign Up</Text>
+                    <TouchableOpacity
+                        style={[styles.signUpButton, loading && styles.disabledButton]}
+                        onPress={handleSignUp}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color={COLORS.surface} />
+                        ) : (
+                            <Text style={styles.signUpButtonText}>Sign Up</Text>
+                        )}
                     </TouchableOpacity>
 
                     <Text style={styles.orText}>or sign up with</Text>
@@ -119,10 +158,7 @@ const CreateAccountScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.background,
-    },
+    container: { flex: 1, backgroundColor: COLORS.background },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -130,27 +166,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 10,
     },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: COLORS.text,
-    },
-    scrollContent: {
-        padding: 20,
-    },
-    form: {
-        alignItems: 'center',
-    },
-    inputContainer: {
-        width: '100%',
-        marginBottom: 20,
-    },
-    label: {
-        fontSize: 16,
-        color: COLORS.text,
-        marginBottom: 8,
-        fontWeight: '500',
-    },
+    headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text },
+    scrollContent: { padding: 20 },
+    form: { alignItems: 'center' },
+    inputContainer: { width: '100%', marginBottom: 20 },
+    label: { fontSize: 16, color: COLORS.text, marginBottom: 8, fontWeight: '500' },
     input: {
         backgroundColor: COLORS.surface,
         borderRadius: 10,
@@ -169,32 +189,20 @@ const styles = StyleSheet.create({
         marginBottom: 30,
         width: '100%',
     },
-    checkboxText: {
-        marginLeft: 10,
-        color: COLORS.text,
-        fontSize: 14,
-        flex: 1,
-    },
+    checkboxText: { marginLeft: 10, color: COLORS.text, fontSize: 14, flex: 1 },
     signUpButton: {
         backgroundColor: COLORS.primary,
         paddingVertical: 12,
         paddingHorizontal: 40,
         borderRadius: 8,
         marginBottom: 20,
+        minWidth: 140,
+        alignItems: 'center',
     },
-    signUpButtonText: {
-        color: COLORS.surface,
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    orText: {
-        color: COLORS.text,
-        marginBottom: 15,
-    },
-    socialContainer: {
-        flexDirection: 'row',
-        marginBottom: 20,
-    },
+    disabledButton: { opacity: 0.6 },
+    signUpButtonText: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },
+    orText: { color: COLORS.text, marginBottom: 15 },
+    socialContainer: { flexDirection: 'row', marginBottom: 20 },
     socialButton: {
         backgroundColor: COLORS.surface,
         width: 50,

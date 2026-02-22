@@ -1,45 +1,69 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  doc,
+  updateDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import { db } from './firebase';
 import { Goal } from '../types';
-import { randomId } from '../utils/ids';
 
-const GOALS_KEY = 'acc_app_goals';
+const GOALS = 'goals';
 
 class GoalService {
+  /** Get all goals where the user is the owner or the partner */
   async getGoals(userId: string): Promise<Goal[]> {
     try {
-      const jsonValue = await AsyncStorage.getItem(GOALS_KEY);
-      const goals: Goal[] = jsonValue != null ? JSON.parse(jsonValue) : [];
-      return goals.filter((goal) => goal.ownerId === userId || goal.partnerId === userId);
+      const col = collection(db, GOALS);
+
+      const [ownerSnap, partnerSnap] = await Promise.all([
+        getDocs(query(col, where('ownerId', '==', userId))),
+        getDocs(query(col, where('partnerId', '==', userId))),
+      ]);
+
+      const seen = new Set<string>();
+      const goals: Goal[] = [];
+
+      for (const snap of [...ownerSnap.docs, ...partnerSnap.docs]) {
+        if (!seen.has(snap.id)) {
+          seen.add(snap.id);
+          goals.push({ ...(snap.data() as Goal), id: snap.id });
+        }
+      }
+
+      return goals;
     } catch (e) {
       console.error('Error fetching goals', e);
       return [];
     }
   }
 
-  async createGoal(goal: Goal) {
+  /** Create a new goal in Firestore */
+  async createGoal(goal: Goal): Promise<void> {
     try {
-      const goals = await this.getAllGoals();
-      const newGoal = goal.id ? goal : { ...goal, id: randomId() };
-      goals.push(newGoal);
-      await AsyncStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+      const { id, ...goalData } = goal;
+      if (id) {
+        // If an ID was pre-assigned keep it via setDoc
+        const { setDoc, doc: docFn } = await import('firebase/firestore');
+        await setDoc(docFn(db, GOALS, id), { ...goalData, createdAt: serverTimestamp() });
+      } else {
+        await addDoc(collection(db, GOALS), { ...goalData, createdAt: serverTimestamp() });
+      }
     } catch (e) {
       console.error('Error creating goal', e);
     }
   }
 
-  async updateGoal(goalId: string, updates: Partial<Goal>) {
+  /** Update an existing goal */
+  async updateGoal(goalId: string, updates: Partial<Goal>): Promise<void> {
     try {
-      const goals = await this.getAllGoals();
-      const updatedGoals = goals.map((goal) => (goal.id === goalId ? { ...goal, ...updates } : goal));
-      await AsyncStorage.setItem(GOALS_KEY, JSON.stringify(updatedGoals));
+      await updateDoc(doc(db, GOALS, goalId), updates as Record<string, unknown>);
     } catch (e) {
       console.error('Error updating goal', e);
     }
-  }
-
-  private async getAllGoals(): Promise<Goal[]> {
-    const jsonValue = await AsyncStorage.getItem(GOALS_KEY);
-    return jsonValue != null ? JSON.parse(jsonValue) : [];
   }
 }
 

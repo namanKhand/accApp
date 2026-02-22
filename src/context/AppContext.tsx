@@ -11,7 +11,6 @@ interface AppContextValue {
   goals: Goal[];
   checkIns: CheckIn[];
   nudges: Nudge[];
-  setUser: (user: UserProfile | null) => void;
   refreshData: () => Promise<void>;
   addGoal: (goal: Goal) => Promise<void>;
   recordCheckIn: (checkIn: Omit<CheckIn, 'id'>) => Promise<void>;
@@ -34,7 +33,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const [goalData, checkInData, nudgeData] = await Promise.all([
         goalService.getGoals(user.id),
         checkInService.getCheckIns(user.id),
-        nudgeService.getNudges(user.id)
+        nudgeService.getNudges(user.id),
       ]);
       setGoals(goalData);
       setCheckIns(checkInData);
@@ -60,23 +59,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   useEffect(() => {
+    // Firebase auth state listener — drives all login/logout transitions
     const unsubscribe = authService.onAuthStateChanged(async (profile) => {
       setUser(profile);
       if (profile) {
-        await refreshData();
+        setLoading(true);
+        try {
+          const [goalData, checkInData, nudgeData] = await Promise.all([
+            goalService.getGoals(profile.id),
+            checkInService.getCheckIns(profile.id),
+            nudgeService.getNudges(profile.id),
+          ]);
+          setGoals(goalData);
+          setCheckIns(checkInData);
+          setNudges(nudgeData);
+        } finally {
+          setLoading(false);
+        }
       } else {
         setGoals([]);
         setCheckIns([]);
         setNudges([]);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return unsubscribe;
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, goals, checkIns, nudges, setUser, refreshData, addGoal, recordCheckIn, sendNudge }),
+    () => ({ user, loading, goals, checkIns, nudges, refreshData, addGoal, recordCheckIn, sendNudge }),
     [user, loading, goals, checkIns, nudges]
   );
 
