@@ -2,6 +2,19 @@
 
 A social habit-building platform that helps people stay consistent with their personal goals by involving accountability partners. Users set structured goals, check in daily with photo proof, build streaks, and rely on partners to nudge them when they miss a check-in.
 
+## Project Status: **Ready for Store Submission**
+
+Everything is configured for our new brand, **do2gether**, under the identifier `com.acc.2gether`.
+
+### New Documentation
+We have prepared exhaustive guides for the store submission and Firebase migration:
+- [Store Readiness Report](docs/store_readiness_report.md): Technical requirements and roadmap.
+- [Submission Metadata](docs/submission_metadata.md): Copy-pasteable store listing text.
+- [Privacy Policy & Terms](docs/legal_drafts.md): Finalized legal drafts for the store.
+- [Firebase Implementation Plan](docs/firebase_implementation_plan.md): Guide for transitioning to live production cloud.
+
+---
+
 ## Repo Contents
 - `docs/` — product vision, feature scope, architecture, plans, and flows.
 - `src/` — React Native (Expo) source for the mobile app.
