@@ -1,33 +1,67 @@
-import { db } from './firebase';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from './firebase';
 import { CheckIn } from '../types';
 
-class CheckInService {
-  private collectionName = 'checkins';
+const CHECKINS = 'checkIns';
 
+class CheckInService {
+  /** Upload a local file URI to Firebase Storage and return the download URL */
+  private async uploadPhoto(localUri: string, userId: string): Promise<string> {
+    const filename = `checkIns/${userId}/${Date.now()}.jpg`;
+    const storageRef = ref(storage, filename);
+
+    // Convert the local file URI to a Blob
+    const response = await fetch(localUri);
+    const blob = await response.blob();
+
+    await uploadBytes(storageRef, blob);
+    return getDownloadURL(storageRef);
+  }
+
+  /** Get all check-ins for a user */
   async getCheckIns(userId: string): Promise<CheckIn[]> {
     try {
-      const snapshot = await db.collection(this.collectionName)
-        .where('userId', '==', userId)
-        .get();
-
-      const checkIns: CheckIn[] = [];
-      snapshot.forEach((doc: any) => {
-        checkIns.push({ id: doc.id, ...doc.data() } as CheckIn);
-      });
-
-      return checkIns;
+      const snap = await getDocs(
+        query(collection(db, CHECKINS), where('userId', '==', userId))
+      );
+      return snap.docs.map((d) => ({ ...(d.data() as CheckIn), id: d.id }));
     } catch (e) {
-      console.error('Error fetching checkins', e);
+      console.error('Error fetching checkIns', e);
       return [];
     }
   }
 
-  async createCheckIn(checkIn: Omit<CheckIn, 'id'>) {
+  /** Create a check-in, uploading any photo first if it is a local URI */
+  async createCheckIn(checkIn: Omit<CheckIn, 'id'>): Promise<void> {
     try {
-      await db.collection(this.collectionName).add(checkIn);
+      let { photoUri, checkOutPhotoUri, ...rest } = checkIn;
+
+      // Upload check-in photo if it's a local file
+      if (photoUri && !photoUri.startsWith('https://')) {
+        photoUri = await this.uploadPhoto(photoUri, checkIn.userId);
+      }
+
+      // Upload check-out photo if it's a local file
+      if (checkOutPhotoUri && !checkOutPhotoUri.startsWith('https://')) {
+        checkOutPhotoUri = await this.uploadPhoto(checkOutPhotoUri, checkIn.userId);
+      }
+
+      await addDoc(collection(db, CHECKINS), {
+        ...rest,
+        photoUri: photoUri ?? null,
+        checkOutPhotoUri: checkOutPhotoUri ?? null,
+        createdAt: serverTimestamp(),
+      });
     } catch (e) {
-      console.error('Error creating checkin', e);
-      throw e;
+      console.error('Error creating checkIn', e);
     }
   }
 }

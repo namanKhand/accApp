@@ -4,7 +4,6 @@ import { authService } from '../services/authService';
 import { goalService } from '../services/goalService';
 import { checkInService } from '../services/checkInService';
 import { nudgeService } from '../services/nudgeService';
-import { storageService } from '../services/storageService';
 
 interface AppContextValue {
   user: UserProfile | null;
@@ -12,7 +11,6 @@ interface AppContextValue {
   goals: Goal[];
   checkIns: CheckIn[];
   nudges: Nudge[];
-  setUser: (user: UserProfile | null) => void;
   refreshData: () => Promise<void>;
   addGoal: (goal: Goal) => Promise<void>;
   recordCheckIn: (checkIn: Omit<CheckIn, 'id'>) => Promise<void>;
@@ -28,16 +26,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [nudges, setNudges] = useState<Nudge[]>([]);
 
-  const refreshData = async (userId?: string) => {
-    const targetId = userId || user?.id;
-    if (!targetId) return;
-
+  const refreshData = async () => {
+    if (!user) return;
     setLoading(true);
     try {
       const [goalData, checkInData, nudgeData] = await Promise.all([
-        goalService.getGoals(targetId),
-        checkInService.getCheckIns(targetId),
-        nudgeService.getNudges(targetId)
+        goalService.getGoals(user.id),
+        checkInService.getCheckIns(user.id),
+        nudgeService.getNudges(user.id),
       ]);
       setGoals(goalData);
       setCheckIns(checkInData);
@@ -53,20 +49,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const recordCheckIn = async (checkIn: Omit<CheckIn, 'id'>) => {
-    let finalPhotoUri = checkIn.photoUri;
-
-    // If there's a local photo URI, upload it to Firebase Storage
-    if (checkIn.photoUri && !checkIn.photoUri.startsWith('http')) {
-      const fileName = `${Date.now()}.jpg`;
-      const storagePath = `checkins/${checkIn.userId}/${checkIn.goalId}/${fileName}`;
-      finalPhotoUri = await storageService.uploadFile(checkIn.photoUri, storagePath);
-    }
-
-    await checkInService.createCheckIn({
-      ...checkIn,
-      photoUri: finalPhotoUri,
-      checkInAt: new Date().toISOString() // Ensure checkInAt is set
-    });
+    await checkInService.createCheckIn(checkIn);
     await refreshData();
   };
 
@@ -76,23 +59,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   useEffect(() => {
+    // Firebase auth state listener — drives all login/logout transitions
     const unsubscribe = authService.onAuthStateChanged(async (profile) => {
       setUser(profile);
       if (profile) {
-        await refreshData(profile.id);
+        setLoading(true);
+        try {
+          const [goalData, checkInData, nudgeData] = await Promise.all([
+            goalService.getGoals(profile.id),
+            checkInService.getCheckIns(profile.id),
+            nudgeService.getNudges(profile.id),
+          ]);
+          setGoals(goalData);
+          setCheckIns(checkInData);
+          setNudges(nudgeData);
+        } finally {
+          setLoading(false);
+        }
       } else {
         setGoals([]);
         setCheckIns([]);
         setNudges([]);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return unsubscribe;
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, goals, checkIns, nudges, setUser, refreshData, addGoal, recordCheckIn, sendNudge }),
+    () => ({ user, loading, goals, checkIns, nudges, refreshData, addGoal, recordCheckIn, sendNudge }),
     [user, loading, goals, checkIns, nudges]
   );
 

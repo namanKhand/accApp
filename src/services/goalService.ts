@@ -1,31 +1,38 @@
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  doc,
+  updateDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
 import { db } from './firebase';
 import { Goal } from '../types';
 
-class GoalService {
-  private collectionName = 'goals';
+const GOALS = 'goals';
 
+class GoalService {
+  /** Get all goals where the user is the owner or the partner */
   async getGoals(userId: string): Promise<Goal[]> {
     try {
-      // Fetch goals where user is owner OR partner
-      const snapshot = await db.collection(this.collectionName)
-        .where('ownerId', '==', userId)
-        .get();
+      const col = collection(db, GOALS);
 
-      const partnerSnapshot = await db.collection(this.collectionName)
-        .where('partnerId', '==', userId)
-        .get();
+      const [ownerSnap, partnerSnap] = await Promise.all([
+        getDocs(query(col, where('ownerId', '==', userId))),
+        getDocs(query(col, where('partnerId', '==', userId))),
+      ]);
 
-      // Combine both results
+      const seen = new Set<string>();
       const goals: Goal[] = [];
-      snapshot.forEach(doc => {
-        goals.push({ id: doc.id, ...doc.data() } as Goal);
-      });
-      partnerSnapshot.forEach(doc => {
-        // Avoid duplicates
-        if (!goals.find(g => g.id === doc.id)) {
-          goals.push({ id: doc.id, ...doc.data() } as Goal);
+
+      for (const snap of [...ownerSnap.docs, ...partnerSnap.docs]) {
+        if (!seen.has(snap.id)) {
+          seen.add(snap.id);
+          goals.push({ ...(snap.data() as Goal), id: snap.id });
         }
-      });
+      }
 
       return goals;
     } catch (e) {
@@ -34,23 +41,28 @@ class GoalService {
     }
   }
 
-  async createGoal(goal: Goal) {
+  /** Create a new goal in Firestore */
+  async createGoal(goal: Goal): Promise<void> {
     try {
-      // Remove id if it exists, let Firestore generate it
       const { id, ...goalData } = goal;
-      await db.collection(this.collectionName).add(goalData);
+      if (id) {
+        // If an ID was pre-assigned keep it via setDoc
+        const { setDoc, doc: docFn } = await import('firebase/firestore');
+        await setDoc(docFn(db, GOALS, id), { ...goalData, createdAt: serverTimestamp() });
+      } else {
+        await addDoc(collection(db, GOALS), { ...goalData, createdAt: serverTimestamp() });
+      }
     } catch (e) {
       console.error('Error creating goal', e);
-      throw e;
     }
   }
 
-  async updateGoal(goalId: string, updates: Partial<Goal>) {
+  /** Update an existing goal */
+  async updateGoal(goalId: string, updates: Partial<Goal>): Promise<void> {
     try {
-      await db.collection(this.collectionName).doc(goalId).update(updates);
+      await updateDoc(doc(db, GOALS, goalId), updates as Record<string, unknown>);
     } catch (e) {
       console.error('Error updating goal', e);
-      throw e;
     }
   }
 }

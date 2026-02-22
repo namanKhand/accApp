@@ -24,6 +24,7 @@ const CheckInScreen: React.FC = () => {
       userId: user.id,
       goalId,
       date: new Date().toISOString(),
+      checkInAt: new Date().toISOString(),
       photoUri,
       notes,
       verifiedByPartner: false

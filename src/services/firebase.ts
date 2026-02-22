@@ -1,28 +1,20 @@
-// @ts-ignore
-import firebase from 'firebase/compat/app';
-// @ts-ignore
-import 'firebase/compat/auth';
-// @ts-ignore
-import 'firebase/compat/firestore';
-// @ts-ignore
-import 'firebase/compat/storage';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyADozZE8MOHmizRAUGwFbTBlCzaKkCkY5w",
-  authDomain: "accoutability-app.firebaseapp.com",
-  projectId: "accoutability-app",
-  storageBucket: "accoutability-app.firebasestorage.app",
-  messagingSenderId: "592757889484",
-  appId: "1:592757889484:web:204a743d568bcf809ca569",
-  measurementId: "G-0GXC7EJEKE"
+  apiKey: 'AIzaSyD6DY3gvL6qfPlNAdYth09mcS9FPW7W-MU',
+  authDomain: 'accapp-bd7a0.firebaseapp.com',
+  projectId: 'accapp-bd7a0',
+  storageBucket: 'accapp-bd7a0.firebasestorage.app',
+  messagingSenderId: '430323754842',
+  appId: '1:430323754842:web:baac0b5d3c1e6dd55af563',
 };
 
-// Initialize Firebase
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
+// Prevent duplicate initialization during Expo fast-refresh
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Export services using compat API
-export const auth = firebase.auth();
-export const db = firebase.firestore();
-export const storage = firebase.storage();
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);

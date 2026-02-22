@@ -1,31 +1,36 @@
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
 import { db } from './firebase';
 import { Nudge } from '../types';
 
+const NUDGES = 'nudges';
+
 class NudgeService {
-  private collectionName = 'nudges';
-
-  async getNudges(userId: string) {
+  /** Get nudges sent to or from a user */
+  async getNudges(userId: string): Promise<Nudge[]> {
     try {
-      // Fetch nudges where user is recipient OR sender
-      const recipientSnapshot = await db.collection(this.collectionName)
-        .where('recipientId', '==', userId)
-        .get();
+      const col = collection(db, NUDGES);
 
-      const senderSnapshot = await db.collection(this.collectionName)
-        .where('senderId', '==', userId)
-        .get();
+      const [sentSnap, receivedSnap] = await Promise.all([
+        getDocs(query(col, where('senderId', '==', userId))),
+        getDocs(query(col, where('recipientId', '==', userId))),
+      ]);
 
-      // Combine both results
+      const seen = new Set<string>();
       const nudges: Nudge[] = [];
-      recipientSnapshot.forEach((doc: any) => {
-        nudges.push({ id: doc.id, ...doc.data() } as Nudge);
-      });
-      senderSnapshot.forEach((doc: any) => {
-        // Avoid duplicates
-        if (!nudges.find(n => n.id === doc.id)) {
-          nudges.push({ id: doc.id, ...doc.data() } as Nudge);
+
+      for (const snap of [...sentSnap.docs, ...receivedSnap.docs]) {
+        if (!seen.has(snap.id)) {
+          seen.add(snap.id);
+          nudges.push({ ...(snap.data() as Nudge), id: snap.id });
         }
-      });
+      }
 
       return nudges;
     } catch (e) {
@@ -34,16 +39,15 @@ class NudgeService {
     }
   }
 
-  async createNudge(nudge: Omit<Nudge, 'id' | 'createdAt'>) {
+  /** Send a nudge */
+  async createNudge(nudge: Omit<Nudge, 'id' | 'createdAt'>): Promise<void> {
     try {
-      const nudgeData = {
+      await addDoc(collection(db, NUDGES), {
         ...nudge,
-        createdAt: new Date().toISOString()
-      };
-      await db.collection(this.collectionName).add(nudgeData);
+        createdAt: serverTimestamp(),
+      });
     } catch (e) {
       console.error('Error creating nudge', e);
-      throw e;
     }
   }
 }

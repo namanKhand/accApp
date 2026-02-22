@@ -4,6 +4,7 @@ import { COLORS } from '../constants/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
+import { authService } from '../services/authService';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
@@ -11,7 +12,7 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const SettingsScreen = () => {
-    const { user, setUser } = useApp();
+    const { user } = useApp();
     const navigation = useNavigation<NavigationProp>();
 
     const handleLogout = () => {
@@ -23,9 +24,9 @@ const SettingsScreen = () => {
                 {
                     text: "Log Out",
                     style: "destructive",
-                    onPress: () => {
-                        setUser(null);
-                        // Navigation will automatically handle this via RootNavigator logic
+                    onPress: async () => {
+                        await authService.signOut();
+                        // onAuthStateChanged in AppContext clears the user and the navigator redirects
                     }
                 }
             ]
