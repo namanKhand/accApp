@@ -1,4 +1,4 @@
-# One-Liner: Social Accountability App
+# do2gether: Social Accountability App
 
 A social habit-building platform that helps people stay consistent with their personal goals by involving accountability partners. Users set structured goals, check in daily with photo proof, build streaks, and rely on partners to nudge them when they miss a check-in.
 
