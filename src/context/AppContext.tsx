@@ -4,6 +4,7 @@ import { authService } from '../services/authService';
 import { goalService } from '../services/goalService';
 import { checkInService } from '../services/checkInService';
 import { nudgeService } from '../services/nudgeService';
+import { storageService } from '../services/storageService';
 
 interface AppContextValue {
   user: UserProfile | null;
@@ -52,7 +53,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const recordCheckIn = async (checkIn: Omit<CheckIn, 'id'>) => {
-    await checkInService.createCheckIn(checkIn);
+    let finalPhotoUri = checkIn.photoUri;
+
+    // If there's a local photo URI, upload it to Firebase Storage
+    if (checkIn.photoUri && !checkIn.photoUri.startsWith('http')) {
+      const fileName = `${Date.now()}.jpg`;
+      const storagePath = `checkins/${checkIn.userId}/${checkIn.goalId}/${fileName}`;
+      finalPhotoUri = await storageService.uploadFile(checkIn.photoUri, storagePath);
+    }
+
+    await checkInService.createCheckIn({
+      ...checkIn,
+      photoUri: finalPhotoUri,
+      checkInAt: new Date().toISOString() // Ensure checkInAt is set
+    });
     await refreshData();
   };
 
