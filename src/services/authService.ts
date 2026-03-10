@@ -1,25 +1,16 @@
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  onAuthStateChanged as firebaseOnAuthStateChanged,
-  signOut as firebaseSignOut,
-  User,
-} from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 import { UserProfile } from '../types';
 
 // ------------------------------------------------------------------
 // Helpers
 // ------------------------------------------------------------------
 
-async function buildProfile(firebaseUser: User): Promise<UserProfile> {
-  const ref = doc(db, 'users', firebaseUser.uid);
-  const snap = await getDoc(ref);
-  if (snap.exists()) {
+async function buildProfile(firebaseUser: FirebaseAuthTypes.User): Promise<UserProfile> {
+  const snap = await firestore().collection('users').doc(firebaseUser.uid).get();
+  if (snap.exists) {
     return snap.data() as UserProfile;
   }
-  // Fallback profile if doc doesn't exist yet
   return {
     id: firebaseUser.uid,
     email: firebaseUser.email ?? '',
@@ -35,33 +26,30 @@ async function buildProfile(firebaseUser: User): Promise<UserProfile> {
 class AuthService {
   /** Sign up with email + password, then write a user profile doc to Firestore */
   async signUp(email: string, password: string, displayName: string): Promise<UserProfile> {
-    const credential = await createUserWithEmailAndPassword(auth, email, password);
+    const credential = await auth().createUserWithEmailAndPassword(email, password);
     const profile: UserProfile = {
       id: credential.user.uid,
       email,
       displayName,
     };
-    await setDoc(doc(db, 'users', credential.user.uid), profile);
+    await firestore().collection('users').doc(credential.user.uid).set(profile);
     return profile;
   }
 
   /** Sign in with email + password */
   async signIn(email: string, password: string): Promise<UserProfile> {
-    const credential = await signInWithEmailAndPassword(auth, email, password);
+    const credential = await auth().signInWithEmailAndPassword(email, password);
     return buildProfile(credential.user);
   }
 
   /** Sign out */
   async signOut(): Promise<void> {
-    await firebaseSignOut(auth);
+    await auth().signOut();
   }
 
-  /**
-   * Listen to auth state changes.
-   * Returns an unsubscribe function (matches the existing AppContext usage).
-   */
+  /** Listen to auth state changes. Returns an unsubscribe function. */
   onAuthStateChanged(callback: (user: UserProfile | null) => void): () => void {
-    return firebaseOnAuthStateChanged(auth, async (firebaseUser: User | null) => {
+    return auth().onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         const profile = await buildProfile(firebaseUser);
         callback(profile);

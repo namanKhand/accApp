@@ -1,93 +1,66 @@
-import {
-    collection,
-    doc,
-    setDoc,
-    getDocs,
-    query,
-    where,
-    updateDoc,
-    serverTimestamp,
-} from 'firebase/firestore';
-import { db } from './firebase';
+import firestore from '@react-native-firebase/firestore';
 import { PartnerInvite } from '../types';
 
 const INVITES = 'invites';
 
 export const inviteService = {
-    /**
-     * Fetch invites sent BY this user (to check if they are waiting for someone to accept)
-     */
+    /** Fetch invites sent BY this user */
     getSentInvites: async (userId: string): Promise<PartnerInvite[]> => {
         try {
-            const q = query(
-                collection(db, INVITES),
-                where('senderId', '==', userId),
-                where('status', '==', 'pending')
-            );
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map((doc: any) => ({
+            const snapshot = await firestore()
+                .collection(INVITES)
+                .where('senderId', '==', userId)
+                .where('status', '==', 'pending')
+                .get();
+            return snapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data()
             } as PartnerInvite));
         } catch (error) {
             console.error('Error fetching sent invites:', error);
-            return []; // Fail gracefully
+            return [];
         }
     },
 
-    /**
-     * Fetch invites sent TO this user (by email)
-     */
+    /** Fetch invites sent TO this user (by email) */
     getReceivedInvites: async (email: string | undefined): Promise<PartnerInvite[]> => {
         if (!email) return [];
         try {
-            const q = query(
-                collection(db, INVITES),
-                where('recipientEmail', '==', email.toLowerCase()),
-                where('status', '==', 'pending')
-            );
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map((doc: any) => ({
+            const snapshot = await firestore()
+                .collection(INVITES)
+                .where('recipientEmail', '==', email.toLowerCase())
+                .where('status', '==', 'pending')
+                .get();
+            return snapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data()
             } as PartnerInvite));
         } catch (error) {
             console.error('Error fetching received invites:', error);
-            return []; // Fail gracefully
+            return [];
         }
     },
 
-    /**
-     * Create a new invite
-     */
+    /** Create a new invite */
     createInvite: async (inviteData: Omit<PartnerInvite, 'id' | 'status' | 'createdAt'>): Promise<string> => {
         try {
-            const inviteRef = doc(collection(db, INVITES));
-            const invite: Omit<PartnerInvite, 'id'> = {
+            const ref = await firestore().collection(INVITES).add({
                 ...inviteData,
                 recipientEmail: inviteData.recipientEmail.toLowerCase(),
                 status: 'pending',
-                createdAt: new Date().toISOString(),
-            };
-
-            await setDoc(inviteRef, {
-                ...invite,
-                createdAt: serverTimestamp(), // Use server time for database sorting
+                createdAt: firestore.FieldValue.serverTimestamp(),
             });
-            return inviteRef.id;
+            return ref.id;
         } catch (error) {
             console.error('Error creating invite:', error);
             throw error;
         }
     },
 
-    /**
-     * Update invite status (e.g. to 'accepted' or 'declined')
-     */
+    /** Update invite status */
     updateInviteStatus: async (inviteId: string, status: 'accepted' | 'declined'): Promise<void> => {
         try {
-            const inviteRef = doc(db, INVITES, inviteId);
-            await updateDoc(inviteRef, { status });
+            await firestore().collection(INVITES).doc(inviteId).update({ status });
         } catch (error) {
             console.error('Error updating invite status:', error);
             throw error;
