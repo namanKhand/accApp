@@ -7,6 +7,8 @@ import { AppProvider } from './src/context/AppContext';
 import RootNavigator from './src/navigation/RootNavigator';
 import { registerForPushNotificationsAsync } from './src/services/notificationService';
 
+import { registerRootComponent } from 'expo';
+
 export default function App() {
   useEffect(() => {
     // Request notification permissions on app start
@@ -30,3 +32,5 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+registerRootComponent(App);
