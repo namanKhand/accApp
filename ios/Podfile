@@ -24,7 +24,6 @@ $RNFirebaseAsStaticFramework = true
 prepare_react_native_project!
 
 target 'do2gether' do
-  use_modular_headers!
   use_expo_modules!
 
   if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'
@@ -44,6 +43,17 @@ target 'do2gether' do
   end
 
   config = use_native_modules!(config_command)
+
+  # Modular headers required by @react-native-firebase Firebase Swift pods
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'FirebaseCore', :modular_headers => true
+  pod 'FirebaseCoreInternal', :modular_headers => true
+  pod 'FirebaseCoreExtension', :modular_headers => true
+  pod 'FirebaseAppCheckInterop', :modular_headers => true
+  pod 'FirebaseAuthInterop', :modular_headers => true
+  pod 'FirebaseSharedSwift', :modular_headers => true
+  pod 'RecaptchaInterop', :modular_headers => true
+  pod 'FirebaseFirestoreInternal', :modular_headers => true
 
   use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
   use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
