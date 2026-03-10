@@ -30,6 +30,28 @@ This will read from `app.json` and create an Xcode workspace configured with the
 2. In the top OS menu bar, click **Product > Archive**.
 3. Wait for the compilation to finish.
 
+## Troubleshooting: Environment Errors
+
+If `npx pod-install` fails with errors about **Ruby**, **FFI**, or **Permissions**, your Mac's default software is likely too old for the modern App Store SDKs.
+
+### 1. Install Homebrew (Modernizes your Mac)
+Run this in your terminal:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+### 2. Install CocoaPods via Homebrew
+Once Homebrew is finished, run:
+```bash
+brew install cocoapods
+```
+
+### 3. Retry the Pod Install
+Once the above are done, run:
+```bash
+npx pod-install
+```
+
 ## 5. Submit to App Store Connect
 1. When the Archive completes, the Xcode Organizer window will appear.
 2. Click the blue **Distribute App** button on the right side.
