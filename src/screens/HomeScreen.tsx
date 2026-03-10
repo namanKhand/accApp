@@ -24,10 +24,10 @@ const HomeScreen = () => {
 
     const countdown = currentGoal ? getCountdown(currentGoal.endDate) : null;
 
-    // Calculate streaks from check-ins
+    // Calculate streaks from my check-ins
     const goalCheckIns = useMemo(() =>
-        currentGoal ? checkIns.filter(ci => ci.goalId === currentGoal.id) : [],
-        [checkIns, currentGoal]
+        currentGoal ? checkIns.filter(ci => ci.goalId === currentGoal.id && ci.userId === user?.id) : [],
+        [checkIns, currentGoal, user]
     );
 
     const currentStreak = useMemo(() =>

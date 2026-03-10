@@ -1,5 +1,11 @@
 {
-  "extends": ["universe/native", "universe/shared/typescript-analysis"],
+  "extends": [
+    "universe/native",
+    "universe/shared/typescript-analysis"
+  ],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
   "rules": {
     "react/react-in-jsx-scope": "off"
   }

@@ -61,7 +61,7 @@ class AuthService {
    * Returns an unsubscribe function (matches the existing AppContext usage).
    */
   onAuthStateChanged(callback: (user: UserProfile | null) => void): () => void {
-    return firebaseOnAuthStateChanged(auth, async (firebaseUser) => {
+    return firebaseOnAuthStateChanged(auth, async (firebaseUser: User | null) => {
       if (firebaseUser) {
         const profile = await buildProfile(firebaseUser);
         callback(profile);

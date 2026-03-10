@@ -5,15 +5,17 @@ import StreakCalendar from '../components/StreakCalendar';
 import { useApp } from '../context/AppContext';
 
 const StreaksScreen: React.FC = () => {
-  const { checkIns } = useApp();
+  const { checkIns, user } = useApp();
 
   const streakDays = useMemo(
     () =>
-      checkIns.map((checkIn) => ({
-        date: checkIn.date.split('T')[0],
-        completed: true
-      })),
-    [checkIns]
+      checkIns
+        .filter((checkIn) => checkIn.userId === user?.id)
+        .map((checkIn) => ({
+          date: checkIn.date.split('T')[0],
+          completed: true
+        })),
+    [checkIns, user]
   );
 
   return (

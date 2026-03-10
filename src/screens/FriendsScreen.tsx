@@ -13,14 +13,12 @@ const FriendsScreen = () => {
 
     // Get partner's check-ins
     const partnerCheckIns = useMemo(() => {
-        if (!partnerGoal) return [];
-        // In a real app, filter by partner's userId
-        // For now, show all check-ins for the goal
+        if (!partnerGoal || !user) return [];
         return checkIns
-            .filter(ci => ci.goalId === partnerGoal.id)
+            .filter(ci => ci.goalId === partnerGoal.id && ci.userId !== user.id)
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
             .slice(0, 5); // Show last 5 check-ins
-    }, [checkIns, partnerGoal]);
+    }, [checkIns, partnerGoal, user]);
 
     const hasPartner = partnerGoal && partnerCheckIns.length > 0;
 

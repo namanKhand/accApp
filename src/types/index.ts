@@ -47,9 +47,11 @@ export interface Nudge {
 export interface PartnerInvite {
   id: string;
   senderId: string;
-  recipientPhone: string;
-  goalId?: string;
+  senderName: string; // Store sender name for UI formatting
+  recipientEmail: string;
+  goalId: string;
   status: 'pending' | 'accepted' | 'declined';
+  createdAt: string;
 }
 
 export interface StreakDay {

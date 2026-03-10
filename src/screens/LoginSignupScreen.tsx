@@ -28,8 +28,7 @@ const LoginSignupScreen = () => {
         try {
             await authService.signIn(email.trim(), password);
             // onAuthStateChanged in AppContext will fire automatically and
-            // the navigator will redirect to Main.
-            navigation.replace('Main');
+            // the RootNavigator state machine will mount the correct screen.
         } catch (error: any) {
             const message =
                 error.code === 'auth/user-not-found' ? 'No account found with this email.' :

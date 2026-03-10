@@ -26,11 +26,12 @@ class CheckInService {
     return getDownloadURL(storageRef);
   }
 
-  /** Get all check-ins for a user */
-  async getCheckIns(userId: string): Promise<CheckIn[]> {
+  /** Get all check-ins for a specific goal (includes both partners) */
+  async getCheckInsForGoal(goalId: string): Promise<CheckIn[]> {
     try {
+      if (!goalId) return [];
       const snap = await getDocs(
-        query(collection(db, CHECKINS), where('userId', '==', userId))
+        query(collection(db, CHECKINS), where('goalId', '==', goalId))
       );
       return snap.docs.map((d) => ({ ...(d.data() as CheckIn), id: d.id }));
     } catch (e) {

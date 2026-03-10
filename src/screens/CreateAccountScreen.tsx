@@ -43,8 +43,7 @@ const CreateAccountScreen = () => {
         setLoading(true);
         try {
             await authService.signUp(email.trim(), password, fullName.trim());
-            // onAuthStateChanged in AppContext fires automatically
-            navigation.replace('GoalSetup');
+            // onAuthStateChanged in AppContext fires automatically and RootNavigator mounts the correct authenticated screen.
         } catch (error: any) {
             const message =
                 error.code === 'auth/email-already-in-use' ? 'An account with this email already exists.' :
