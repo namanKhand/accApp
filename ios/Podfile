@@ -9,10 +9,12 @@ def ccache_enabled?(podfile_properties)
   podfile_properties['apple.ccacheEnabled'] == 'true'
 end
 
+# Source Build Fix: Force React Native to build from source to avoid header conflicts with prebuilt binaries
+ENV['RCT_USE_PREBUILT_RNCORE'] = '0'
+ENV['RCT_USE_RN_DEP'] = '0'
+
 ENV['RCT_NEW_ARCH_ENABLED'] ||= '0' if podfile_properties['newArchEnabled'] == 'false'
 ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] ||= podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
-ENV['RCT_USE_RN_DEP'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true' && podfile_properties['newArchEnabled'] != 'false'
-ENV['RCT_USE_PREBUILT_RNCORE'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true' && podfile_properties['newArchEnabled'] != 'false'
 platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
 
 # Required for @react-native-firebase to build Firebase Swift pods as static frameworks
@@ -41,12 +43,18 @@ target 'do2gether' do
 
   config = use_native_modules!(config_command)
 
-  # Use static frameworks linkage (Recommended for @react-native-firebase)
-  # This allows FirebaseAuth-Swift.h to be generated while maintaining
-  # compatibility with React Native's static library structure.
+  # Source Build Fix setup
+  # 1. Use static frameworks linkage (Required for @react-native-firebase Swift compatibility)
   use_frameworks! :linkage => :static
 
-  # Explicitly disable modular headers for pods that don't support it
+  # 2. Enable modular headers globally to ensure visibility across frameworks
+  use_modular_headers!
+
+  # 3. Explicitly add Firebase core dependencies to ensure they are available as modular headers
+  pod 'FirebaseCore'
+  pod 'FirebaseFirestoreInternal'
+
+  # 4. Explicitly disable modular headers ONLY for pods that are known to break
   pod 'gRPC-C++', :modular_headers => false
   pod 'gRPC-Core', :modular_headers => false
   pod 'abseil', :modular_headers => false
@@ -61,13 +69,13 @@ target 'do2gether' do
   post_install do |installer|
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
+        # Maximum compatibility for non-modular headers
         config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
-        
-        # Broaden search paths to resolve types across library boundaries
-        config.build_settings['HEADER_SEARCH_PATHS'] ||= '$(inherited) '
-        config.build_settings['HEADER_SEARCH_PATHS'] << '"$(PODS_ROOT)/Headers/Public" '
-        config.build_settings['HEADER_SEARCH_PATHS'] << '"$(PODS_ROOT)/Headers/Public/Firebase" '
-        config.build_settings['HEADER_SEARCH_PATHS'] << '"$(PODS_ROOT)/Headers/Public/React-Core" '
+
+        # Force modular internal definitions for all core libraries
+        if target.name.start_with?('RNFB') || target.name.start_with?('React') || target.name.start_with?('Firebase')
+          config.build_settings['DEFINES_MODULE'] = 'YES'
+        end
       end
     end
     react_native_post_install(
