@@ -8,7 +8,7 @@ import { UserProfile } from '../types';
 
 async function buildProfile(firebaseUser: FirebaseAuthTypes.User): Promise<UserProfile> {
   const snap = await firestore().collection('users').doc(firebaseUser.uid).get();
-  if (snap.exists) {
+  if (snap.exists()) {
     return snap.data() as UserProfile;
   }
   return {
@@ -27,6 +27,9 @@ class AuthService {
   /** Sign up with email + password, then write a user profile doc to Firestore */
   async signUp(email: string, password: string, displayName: string): Promise<UserProfile> {
     const credential = await auth().createUserWithEmailAndPassword(email, password);
+    // Set displayName on Firebase Auth profile first so buildProfile fallback
+    // has the correct name if onAuthStateChanged fires before Firestore write completes.
+    await credential.user.updateProfile({ displayName });
     const profile: UserProfile = {
       id: credential.user.uid,
       email,

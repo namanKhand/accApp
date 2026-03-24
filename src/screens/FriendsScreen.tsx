@@ -8,8 +8,8 @@ import { useApp } from '../context/AppContext';
 const FriendsScreen = () => {
     const { user, goals, checkIns } = useApp();
 
-    // Get partner's goal (for now, just use the first goal)
-    const partnerGoal = goals[0];
+    // Get the shared goal (one where we have an assigned partner)
+    const partnerGoal = goals.find(g => g.partnerId && g.partnerId !== '');
 
     // Get partner's check-ins
     const partnerCheckIns = useMemo(() => {

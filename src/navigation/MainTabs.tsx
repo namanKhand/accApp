@@ -43,7 +43,7 @@ const MainTabs = () => (
 
         // Highlight active tab with a circle or different style if needed
         // For now just changing color/size
-        return <MaterialCommunityIcons name={iconName as any} color={focused ? COLORS.text : COLORS.text} size={30} />;
+        return <MaterialCommunityIcons name={iconName as any} color={focused ? COLORS.primary : COLORS.text} size={30} />;
       }
     })}
   >

@@ -238,7 +238,7 @@ const HomeScreen = () => {
                     <Text style={styles.partnerTitle}>Who's Keeping You Accountable:</Text>
                     {user?.partnerId ? (
                         <>
-                            <Text style={styles.partnerName}>Partner Name</Text>
+                            <Text style={styles.partnerName}>Your Partner</Text>
                             <TouchableOpacity style={styles.editButtonSmall} onPress={() => navigation.navigate('InviteFriend')}>
                                 <Text style={styles.editButtonTextSmall}>Edit</Text>
                             </TouchableOpacity>

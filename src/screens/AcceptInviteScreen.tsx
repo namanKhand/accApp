@@ -54,8 +54,8 @@ const AcceptInviteScreen = () => {
 
                     <View style={styles.divider} />
 
-                    <Text style={styles.subtitle}>Goal id:</Text>
-                    <Text style={styles.goalTitle}>{pendingInvite.goalId}</Text>
+                    <Text style={styles.subtitle}>Their Goal:</Text>
+                    <Text style={styles.goalTitle}>View after accepting</Text>
 
                     <View style={styles.divider} />
 

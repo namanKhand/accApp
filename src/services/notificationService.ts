@@ -31,8 +31,12 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
             return null;
         }
 
-        token = (await Notifications.getExpoPushTokenAsync()).data;
-        console.log('Push token:', token);
+        try {
+          token = (await Notifications.getExpoPushTokenAsync()).data;
+          console.log('Push token:', token);
+        } catch (e) {
+          console.warn('Could not get push token:', e);
+        }
     } else {
         console.log('Must use physical device for Push Notifications');
     }

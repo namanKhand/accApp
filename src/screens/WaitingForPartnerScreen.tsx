@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../constants/colors';
 import { authService } from '../services/authService';
-import { useApp } from '../context/AppContext';
 
 const WaitingForPartnerScreen = () => {
     // The AppContext constantly listens for invites in the background.

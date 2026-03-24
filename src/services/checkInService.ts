@@ -49,6 +49,7 @@ class CheckInService {
       });
     } catch (e) {
       console.error('Error creating checkIn', e);
+      throw e;
     }
   }
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useApp } from '../context/AppContext';
 import { COLORS } from '../constants/colors';
@@ -36,7 +37,11 @@ export const RootNavigator = () => {
   const { user, loading, goals, sentInvites, receivedInvites } = useApp();
 
   if (loading) {
-    return <LaunchScreen />;
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
   }
 
   // --- State Machine Logic ---
@@ -127,7 +132,7 @@ export const RootNavigator = () => {
               options={{ headerShown: false }}
             />
           ) : (
-            // User has no active goal and no invites -> force them to create a goal
+            // User has no active goal and no invites -> encourage them to create a goal, but allow skip
             <>
               <Stack.Screen
                 name="GoalSetup"
@@ -138,6 +143,16 @@ export const RootNavigator = () => {
                 name="InviteFriend"
                 component={InviteFriendScreen}
                 options={{ title: 'Invite Partner', headerLeft: () => null, gestureEnabled: false }}
+              />
+              <Stack.Screen
+                name="Main"
+                component={MainTabs}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="ContactUs"
+                component={ContactUsScreen}
+                options={{ title: 'Contact Us' }}
               />
             </>
           )}

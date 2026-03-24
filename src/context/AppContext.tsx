@@ -120,6 +120,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
           // Setup polling to refresh state while app is open and waiting
           // for a partner to join (since we aren't using real-time listeners for invites yet)
+          if (interval) clearInterval(interval);
           interval = setInterval(async () => {
             try {
               const [sent, received] = await Promise.all([

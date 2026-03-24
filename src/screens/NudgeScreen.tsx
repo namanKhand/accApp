@@ -8,10 +8,12 @@ const NudgeScreen: React.FC = () => {
 
   const handleSendReminder = async () => {
     if (!user || goals.length === 0) return;
+    const sharedGoal = goals.find(g => g.partnerId && g.partnerId !== '');
+    if (!sharedGoal) return;
     await sendNudge({
-      goalId: goals[0].id,
+      goalId: sharedGoal.id,
       senderId: user.id,
-      recipientId: goals[0].partnerId,
+      recipientId: sharedGoal.partnerId,
       message: 'Time to check in!'
     });
   };

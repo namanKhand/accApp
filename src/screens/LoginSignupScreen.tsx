@@ -31,11 +31,12 @@ const LoginSignupScreen = () => {
             // the RootNavigator state machine will mount the correct screen.
         } catch (error: any) {
             const message =
-                error.code === 'auth/user-not-found' ? 'No account found with this email.' :
-                    error.code === 'auth/wrong-password' ? 'Incorrect password. Please try again.' :
-                        error.code === 'auth/invalid-email' ? 'Please enter a valid email address.' :
-                            error.code === 'auth/too-many-requests' ? 'Too many attempts. Please try again later.' :
-                                'Login failed. Please try again.';
+                error.code === 'auth/invalid-credential' ? 'Incorrect email or password. Please try again.' :
+                    error.code === 'auth/user-not-found' ? 'No account found with this email.' :
+                        error.code === 'auth/wrong-password' ? 'Incorrect password. Please try again.' :
+                            error.code === 'auth/invalid-email' ? 'Please enter a valid email address.' :
+                                error.code === 'auth/too-many-requests' ? 'Too many attempts. Please try again later.' :
+                                    'Login failed. Please try again.';
             Alert.alert('Login Error', message);
         } finally {
             setLoading(false);
