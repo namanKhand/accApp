@@ -1,15 +1,29 @@
-import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import { getApp } from '@react-native-firebase/app';
+import auth, {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+  getIdToken,
+  FirebaseAuthTypes,
+} from '@react-native-firebase/auth';
+import firestore, { getFirestore, collection, doc, getDoc, setDoc } from '@react-native-firebase/firestore';
 import { UserProfile } from '../types';
 
-// ------------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------------
+const getFirebaseAuth = () => getAuth(getApp());
+const getFirebaseDb = () => getFirestore(getApp());
 
 async function buildProfile(firebaseUser: FirebaseAuthTypes.User): Promise<UserProfile> {
-  const snap = await firestore().collection('users').doc(firebaseUser.uid).get();
-  if (snap.exists()) {
-    return snap.data() as UserProfile;
+  try {
+    await getIdToken(firebaseUser); // ensure auth token is ready before Firestore calls
+    const snap = await getDoc(doc(getFirebaseDb(), 'users', firebaseUser.uid));
+    if (snap.exists()) {
+      return snap.data() as UserProfile;
+    }
+  } catch (e) {
+    console.error('buildProfile Firestore read failed:', e);
   }
   return {
     id: firebaseUser.uid,
@@ -19,40 +33,30 @@ async function buildProfile(firebaseUser: FirebaseAuthTypes.User): Promise<UserP
   };
 }
 
-// ------------------------------------------------------------------
-// Auth Service
-// ------------------------------------------------------------------
-
 class AuthService {
-  /** Sign up with email + password, then write a user profile doc to Firestore */
   async signUp(email: string, password: string, displayName: string): Promise<UserProfile> {
-    const credential = await auth().createUserWithEmailAndPassword(email, password);
-    // Set displayName on Firebase Auth profile first so buildProfile fallback
-    // has the correct name if onAuthStateChanged fires before Firestore write completes.
-    await credential.user.updateProfile({ displayName });
-    const profile: UserProfile = {
-      id: credential.user.uid,
-      email,
-      displayName,
-    };
-    await firestore().collection('users').doc(credential.user.uid).set(profile);
+    const credential = await createUserWithEmailAndPassword(getFirebaseAuth(), email, password);
+    await updateProfile(credential.user, { displayName });
+    const profile: UserProfile = { id: credential.user.uid, email, displayName };
+    try {
+      await setDoc(doc(getFirebaseDb(), 'users', credential.user.uid), profile);
+    } catch (e) {
+      console.error('Firestore profile write failed (auth succeeded):', e);
+    }
     return profile;
   }
 
-  /** Sign in with email + password */
   async signIn(email: string, password: string): Promise<UserProfile> {
-    const credential = await auth().signInWithEmailAndPassword(email, password);
+    const credential = await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
     return buildProfile(credential.user);
   }
 
-  /** Sign out */
   async signOut(): Promise<void> {
-    await auth().signOut();
+    await signOut(getFirebaseAuth());
   }
 
-  /** Listen to auth state changes. Returns an unsubscribe function. */
-  onAuthStateChanged(callback: (user: UserProfile | null) => void): () => void {
-    return auth().onAuthStateChanged(async (firebaseUser) => {
+  listenToAuthState(callback: (user: UserProfile | null) => void): () => void {
+    return onAuthStateChanged(getFirebaseAuth(), async (firebaseUser) => {
       if (firebaseUser) {
         const profile = await buildProfile(firebaseUser);
         callback(profile);

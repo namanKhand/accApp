@@ -50,7 +50,7 @@ const HomeScreen = () => {
             }
 
             const result = await ImagePicker.launchCameraAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                mediaTypes: ['images'],
                 allowsEditing: true,
                 aspect: [4, 3],
                 quality: 0.5,
@@ -83,7 +83,7 @@ const HomeScreen = () => {
             }
 
             const result = await ImagePicker.launchCameraAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                mediaTypes: ['images'],
                 allowsEditing: true,
                 aspect: [4, 3],
                 quality: 0.5,

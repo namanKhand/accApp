@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboard, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboard, ActivityIndicator, Alert, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../constants/colors';
@@ -31,7 +31,29 @@ const InviteFriendScreen = () => {
                 recipientEmail: friendEmail.trim(),
                 goalId: currentGoal.id,
             });
-            // The RootNavigator will automatically detect we have a sent invite and redirect us to WaitingForPartner
+
+            // Open native mail app with pre-filled invite email
+            const subject = encodeURIComponent('Join me on 2gether — I need you as my accountability partner!');
+            const body = encodeURIComponent(
+                `Hi ${friendName},\n\n` +
+                `Studies show that accountability can increase the likelihood of achieving your goals to as high as 95%!\n\n` +
+                `I recently created a goal and want you to keep me accountable: ${currentGoal.title}\n\n` +
+                `Please download the 2gether app and sign up with this exact email address: ${friendEmail.trim()}\n\n` +
+                `Once you sign up, you'll automatically be linked to my goal.\n\n` +
+                `Your friend,\n${user.displayName}`
+            );
+            const mailtoUrl = `mailto:${friendEmail.trim()}?subject=${subject}&body=${body}`;
+
+            const canOpen = await Linking.canOpenURL(mailtoUrl);
+            if (canOpen) {
+                await Linking.openURL(mailtoUrl);
+            } else {
+                Alert.alert(
+                    'No Mail App Found',
+                    'Your invite has been saved. Please email your partner manually at: ' + friendEmail.trim()
+                );
+            }
+            // RootNavigator will automatically detect the sent invite and show WaitingForPartner
         } catch (error) {
             console.error('Error sending invite:', error);
             Alert.alert('Error', 'Failed to send invite. Please try again.');

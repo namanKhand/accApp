@@ -35,7 +35,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const refreshData = async () => {
     if (!user) return;
-    setLoading(true);
     try {
       const [goalData, nudgeData, sent, received] = await Promise.all([
         goalService.getGoals(user.id),
@@ -49,8 +48,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setNudges(nudgeData);
       setSentInvites(sent);
       setReceivedInvites(received);
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.error('refreshData error:', e);
     }
   };
 
@@ -100,7 +99,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     let interval: ReturnType<typeof setInterval>;
 
     // Firebase auth state listener — drives all login/logout transitions
-    const unsubscribe = authService.onAuthStateChanged(async (profile) => {
+    const unsubscribe = authService.listenToAuthState(async (profile) => {
       setUser(profile);
       if (profile) {
         setLoading(true);

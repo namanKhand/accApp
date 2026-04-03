@@ -1,29 +1,33 @@
-import firestore from '@react-native-firebase/firestore';
+import { getApp } from '@react-native-firebase/app';
+import firestore, {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  serverTimestamp,
+} from '@react-native-firebase/firestore';
 import { Nudge } from '../types';
 
+const db = () => firestore(getApp());
 const NUDGES = 'nudges';
 
 class NudgeService {
-  /** Get nudges sent to or from a user */
   async getNudges(userId: string): Promise<Nudge[]> {
     try {
-      const col = firestore().collection(NUDGES);
-
+      const col = collection(db(), NUDGES);
       const [sentSnap, receivedSnap] = await Promise.all([
-        col.where('senderId', '==', userId).get(),
-        col.where('recipientId', '==', userId).get(),
+        getDocs(query(col, where('senderId', '==', userId))),
+        getDocs(query(col, where('recipientId', '==', userId))),
       ]);
-
       const seen = new Set<string>();
       const nudges: Nudge[] = [];
-
       for (const snap of [...sentSnap.docs, ...receivedSnap.docs]) {
         if (!seen.has(snap.id)) {
           seen.add(snap.id);
           nudges.push({ ...(snap.data() as Nudge), id: snap.id });
         }
       }
-
       return nudges;
     } catch (e) {
       console.error('Error fetching nudges', e);
@@ -31,12 +35,11 @@ class NudgeService {
     }
   }
 
-  /** Send a nudge */
   async createNudge(nudge: Omit<Nudge, 'id' | 'createdAt'>): Promise<void> {
     try {
-      await firestore().collection(NUDGES).add({
+      await addDoc(collection(db(), NUDGES), {
         ...nudge,
-        createdAt: firestore.FieldValue.serverTimestamp(),
+        createdAt: serverTimestamp(),
       });
     } catch (e) {
       console.error('Error creating nudge', e);
