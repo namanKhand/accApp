@@ -6,6 +6,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
 import * as ImagePicker from 'expo-image-picker';
+import * as Device from 'expo-device';
+import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { getCountdown } from '../utils/dateUtils';
@@ -40,30 +42,66 @@ const HomeScreen = () => {
         [goalCheckIns]
     );
 
+    const openPhotoCapture = async () => {
+        if (!Device.isDevice) {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permission Denied', 'Photo library access is needed when using the iOS simulator.');
+                return null;
+            }
+
+            Alert.alert('Simulator Detected', 'The iOS simulator does not support the camera, so we opened your photo library instead.');
+            return ImagePicker.launchImageLibraryAsync({
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 0.6,
+            });
+        }
+
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission Denied', 'Camera access is needed to capture your progress photos.');
+            return null;
+        }
+
+        try {
+            return await ImagePicker.launchCameraAsync({
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 0.6,
+            });
+        } catch (error) {
+            console.error('Camera launch failed, falling back to library:', error);
+            const { status: libraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (libraryStatus !== 'granted') {
+                Alert.alert('Camera Error', 'The camera failed to open, and photo library access was not granted.');
+                return null;
+            }
+
+            Alert.alert('Camera Unavailable', 'We could not open the camera, so your photo library will open instead.');
+            return ImagePicker.launchImageLibraryAsync({
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 0.6,
+            });
+        }
+    };
+
     const handleCheckIn = async () => {
         try {
-            const { status } = await ImagePicker.requestCameraPermissionsAsync();
-
-            if (status !== 'granted') {
-                Alert.alert('Permission Denied', 'Sorry, we need camera permissions to make this work!');
+            const result = await openPhotoCapture();
+            if (!result || result.canceled || !result.assets?.length) {
                 return;
             }
 
-            const result = await ImagePicker.launchCameraAsync({
-                mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [4, 3],
-                quality: 0.5,
-            });
-
-            if (!result.canceled) {
-                const timestamp = new Date().toISOString();
-                setCheckInImage(result.assets[0].uri);
-                setCheckInTime(timestamp);
-                Alert.alert('Success', 'Check-in complete! Go crush your goal!');
-            }
+            const timestamp = new Date().toISOString();
+            setCheckInImage(result.assets[0].uri);
+            setCheckInTime(timestamp);
+            setCheckOutImage(null);
+            setCheckOutTime(null);
+            Alert.alert('Success', 'Check-in complete! Go crush your goal!');
         } catch (error) {
-            Alert.alert('Error', 'An error occurred while taking the photo.');
+            Alert.alert('Error', 'An error occurred while capturing your check-in photo.');
             console.error(error);
         }
     };
@@ -75,22 +113,9 @@ const HomeScreen = () => {
         }
 
         try {
-            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+            const result = await openPhotoCapture();
 
-            if (status !== 'granted') {
-                Alert.alert('Permission Denied', 'Sorry, we need camera permissions to make this work!');
-                return;
-            }
-
-            const result = await ImagePicker.launchCameraAsync({
-                mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [4, 3],
-                quality: 0.5,
-            });
-
-            if (result.canceled) {
-                console.log('User canceled photo');
+            if (!result || result.canceled) {
                 return;
             }
 
@@ -149,7 +174,7 @@ const HomeScreen = () => {
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {/* My Goal Card */}
-                <View style={styles.card}>
+                <LinearGradient colors={['rgba(255,255,255,0.54)', 'rgba(255,255,255,0.22)']} style={styles.card}>
                     <View style={styles.cardHeader}>
                         <Text style={styles.cardTitle}>My Goal:</Text>
                         <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('GoalSetup')}>
@@ -173,22 +198,22 @@ const HomeScreen = () => {
                             <Text style={styles.countdownText}>{countdown}</Text>
                         </View>
                     )}
-                </View>
+                </LinearGradient>
 
                 {/* Streaks */}
                 <View style={styles.streaksRow}>
-                    <View style={styles.streakContainer}>
+                    <LinearGradient colors={['rgba(255,255,255,0.48)', 'rgba(255,255,255,0.2)']} style={styles.streakContainer}>
                         <Text style={styles.streakLabel}>Current Streak:</Text>
                         <Text style={styles.streakValue}>{currentStreak} days 🔥</Text>
-                    </View>
-                    <View style={styles.streakContainer}>
+                    </LinearGradient>
+                    <LinearGradient colors={['rgba(255,255,255,0.48)', 'rgba(255,255,255,0.2)']} style={styles.streakContainer}>
                         <Text style={styles.streakLabel}>Longest Streak:</Text>
                         <Text style={styles.streakValue}>{longestStreak} days 🏆</Text>
-                    </View>
+                    </LinearGradient>
                 </View>
 
                 {/* Check-In */}
-                <View style={styles.actionCard}>
+                <LinearGradient colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0.18)']} style={styles.actionCard}>
                     <Text style={styles.actionTitle}>Check-In:</Text>
                     <View style={styles.iconContainer}>
                         {checkInImage ? (
@@ -205,10 +230,10 @@ const HomeScreen = () => {
                     <TouchableOpacity style={styles.actionButton} onPress={handleCheckIn}>
                         <Text style={styles.actionButtonText}>{checkInImage ? 'Retake Photo' : 'Take Photo'}</Text>
                     </TouchableOpacity>
-                </View>
+                </LinearGradient>
 
                 {/* Check-Out */}
-                <View style={styles.actionCard}>
+                <LinearGradient colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0.18)']} style={styles.actionCard}>
                     <Text style={styles.actionTitle}>Check-Out:</Text>
                     <View style={styles.iconContainer}>
                         {checkOutImage ? (
@@ -229,12 +254,12 @@ const HomeScreen = () => {
                     >
                         <Text style={styles.actionButtonText}>{checkOutImage ? 'Retake Photo' : 'Check-Out'}</Text>
                     </TouchableOpacity>
-                </View>
+                </LinearGradient>
 
                 <Text style={styles.hintText}>Take a photo before and after you start your action!</Text>
 
                 {/* Accountability Partner */}
-                <View style={styles.partnerCard}>
+                <LinearGradient colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0.2)']} style={styles.partnerCard}>
                     <Text style={styles.partnerTitle}>Who's Keeping You Accountable:</Text>
                     {user?.partnerId ? (
                         <>
@@ -250,7 +275,7 @@ const HomeScreen = () => {
                             </Text>
                         </TouchableOpacity>
                     )}
-                </View>
+                </LinearGradient>
             </ScrollView>
         </SafeAreaView>
     );
@@ -268,6 +293,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         position: 'relative',
         height: 50,
+        marginHorizontal: 20,
+        marginTop: 8,
+        borderRadius: 22,
+        backgroundColor: 'rgba(255,255,255,0.34)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.42)',
     },
     logoText: {
         position: 'absolute',
@@ -286,10 +317,16 @@ const styles = StyleSheet.create({
         paddingBottom: 100,
     },
     card: {
-        backgroundColor: COLORS.surface,
         borderRadius: 15,
         padding: 15,
         marginBottom: 15,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.44)',
+        shadowColor: COLORS.text,
+        shadowOffset: { width: 0, height: 14 },
+        shadowOpacity: 0.1,
+        shadowRadius: 22,
+        elevation: 7,
     },
     cardHeader: {
         flexDirection: 'row',
@@ -345,15 +382,16 @@ const styles = StyleSheet.create({
     },
     streakContainer: {
         flex: 1,
-        backgroundColor: COLORS.surface,
         borderRadius: 15,
         padding: 15,
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.44)',
+        shadowColor: COLORS.text,
+        shadowOffset: { width: 0, height: 12 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
+        shadowRadius: 20,
+        elevation: 6,
     },
     streakLabel: {
         fontSize: 12,
@@ -369,11 +407,17 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     actionCard: {
-        backgroundColor: COLORS.surface,
         borderRadius: 15,
         padding: 15,
         marginBottom: 15,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.44)',
+        shadowColor: COLORS.text,
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+        elevation: 6,
     },
     actionTitle: {
         alignSelf: 'flex-start',
@@ -387,11 +431,14 @@ const styles = StyleSheet.create({
         height: 60,
         justifyContent: 'center',
         alignItems: 'center',
+        width: '100%',
+        borderRadius: 14,
+        backgroundColor: 'rgba(255,255,255,0.28)',
     },
     checkInImage: {
-        width: 60,
-        height: 60,
-        borderRadius: 10,
+        width: '100%',
+        height: 180,
+        borderRadius: 12,
     },
     timestampText: {
         fontSize: 12,
@@ -399,10 +446,10 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     actionButton: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: 'rgba(223,168,120,0.9)',
         paddingVertical: 10,
         paddingHorizontal: 30,
-        borderRadius: 8,
+        borderRadius: 12,
         width: '100%',
         alignItems: 'center',
     },
@@ -423,10 +470,16 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     partnerCard: {
-        backgroundColor: COLORS.surface,
         borderRadius: 15,
         padding: 15,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.44)',
+        shadowColor: COLORS.text,
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+        elevation: 6,
     },
     partnerTitle: {
         fontSize: 14,

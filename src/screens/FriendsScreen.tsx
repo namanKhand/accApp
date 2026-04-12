@@ -4,6 +4,7 @@ import { COLORS } from '../constants/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const FriendsScreen = () => {
     const { user, goals, checkIns } = useApp();
@@ -57,19 +58,19 @@ const FriendsScreen = () => {
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {/* Partner Goal Card */}
-                <View style={styles.card}>
+                <LinearGradient colors={['rgba(255,255,255,0.54)', 'rgba(255,255,255,0.22)']} style={styles.card}>
                     <Text style={styles.cardTitle}>Partner's Goal:</Text>
                     <Text style={styles.goalText}>{partnerGoal.title}</Text>
                     {partnerGoal.description && (
                         <Text style={styles.goalDescription}>{partnerGoal.description}</Text>
                     )}
-                </View>
+                </LinearGradient>
 
                 {/* Recent Check-Ins */}
                 <Text style={styles.sectionTitle}>Recent Activity</Text>
 
                 {partnerCheckIns.map((checkIn) => (
-                    <View key={checkIn.id} style={styles.checkInCard}>
+                    <LinearGradient key={checkIn.id} colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0.18)']} style={styles.checkInCard}>
                         <View style={styles.checkInHeader}>
                             <MaterialCommunityIcons name="calendar-check" size={20} color={COLORS.primary} />
                             <Text style={styles.checkInDate}>
@@ -122,7 +123,7 @@ const FriendsScreen = () => {
                         {checkIn.notes && (
                             <Text style={styles.notes}>"{checkIn.notes}"</Text>
                         )}
-                    </View>
+                    </LinearGradient>
                 ))}
             </ScrollView>
         </SafeAreaView>
@@ -141,8 +142,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         position: 'relative',
         height: 50,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(0,0,0,0.05)',
+        marginHorizontal: 20,
+        marginTop: 8,
+        borderRadius: 22,
+        backgroundColor: 'rgba(255,255,255,0.34)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.42)',
     },
     logoText: {
         position: 'absolute',
@@ -161,10 +166,11 @@ const styles = StyleSheet.create({
         paddingBottom: 100,
     },
     card: {
-        backgroundColor: COLORS.surface,
         borderRadius: 15,
         padding: 15,
         marginBottom: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.44)',
     },
     cardTitle: {
         fontSize: 14,
@@ -190,15 +196,16 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     checkInCard: {
-        backgroundColor: COLORS.surface,
         borderRadius: 15,
         padding: 15,
         marginBottom: 15,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.44)',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 12 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
+        shadowRadius: 20,
+        elevation: 6,
     },
     checkInHeader: {
         flexDirection: 'row',
@@ -237,7 +244,7 @@ const styles = StyleSheet.create({
         width: 120,
         height: 120,
         borderRadius: 10,
-        backgroundColor: COLORS.secondary + '40',
+        backgroundColor: 'rgba(255,255,255,0.26)',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 5,

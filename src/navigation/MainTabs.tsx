@@ -22,11 +22,19 @@ const MainTabs = () => (
       tabBarActiveTintColor: COLORS.primary,
       tabBarInactiveTintColor: COLORS.text,
       tabBarStyle: {
-        backgroundColor: COLORS.primary,
-        height: 80,
+        position: 'absolute',
+        backgroundColor: 'rgba(255,255,255,0.4)',
+        height: 84,
         paddingBottom: 20,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
+        borderTopWidth: 1,
+        borderColor: 'rgba(255,255,255,0.45)',
+        shadowColor: COLORS.text,
+        shadowOffset: { width: 0, height: -10 },
+        shadowOpacity: 0.08,
+        shadowRadius: 18,
+        elevation: 12,
       },
       tabBarLabelStyle: {
         fontSize: 12,
@@ -43,7 +51,7 @@ const MainTabs = () => (
 
         // Highlight active tab with a circle or different style if needed
         // For now just changing color/size
-        return <MaterialCommunityIcons name={iconName as any} color={focused ? COLORS.primary : COLORS.text} size={30} />;
+        return <MaterialCommunityIcons name={iconName as any} color={focused ? COLORS.primary : COLORS.text} size={28} />;
       }
     })}
   >

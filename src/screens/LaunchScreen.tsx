@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../constants/colors';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { getHasSeenOnboarding } from '../utils/onboarding';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Launch'>;
 
@@ -12,11 +13,30 @@ const LaunchScreen = () => {
     const navigation = useNavigation<NavigationProp>();
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            navigation.replace('Onboarding');
-        }, 2500);
+        let active = true;
 
-        return () => clearTimeout(timer);
+        const boot = async () => {
+            const hasSeenOnboarding = await getHasSeenOnboarding();
+
+            const timer = setTimeout(() => {
+                if (!active) {
+                    return;
+                }
+                navigation.replace(hasSeenOnboarding ? 'LoginSignup' : 'Onboarding');
+            }, 1800);
+
+            return () => clearTimeout(timer);
+        };
+
+        let cleanup: (() => void) | undefined;
+        boot().then((result) => {
+            cleanup = result;
+        });
+
+        return () => {
+            active = false;
+            cleanup?.();
+        };
     }, [navigation]);
 
     return (
@@ -43,6 +63,17 @@ const styles = StyleSheet.create({
     },
     content: {
         alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.38)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.45)',
+        borderRadius: 28,
+        paddingHorizontal: 36,
+        paddingVertical: 40,
+        shadowColor: COLORS.text,
+        shadowOffset: { width: 0, height: 16 },
+        shadowOpacity: 0.12,
+        shadowRadius: 24,
+        elevation: 8,
     },
     imagePlaceholder: {
         width: 200,

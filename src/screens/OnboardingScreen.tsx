@@ -6,6 +6,8 @@ import { COLORS } from '../constants/colors';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { markOnboardingSeen } from '../utils/onboarding';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Onboarding'>;
 
@@ -58,7 +60,9 @@ const OnboardingScreen = () => {
         if (currentIndex < SLIDES.length - 1) {
             flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
         } else {
-            navigation.replace('LoginSignup');
+            markOnboardingSeen().finally(() => {
+                navigation.replace('LoginSignup');
+            });
         }
     };
 
@@ -76,11 +80,11 @@ const OnboardingScreen = () => {
 
     const renderItem = ({ item }: { item: typeof SLIDES[0] }) => (
         <View style={styles.slide}>
-            <View style={styles.imageContainer}>
+            <LinearGradient colors={['rgba(255,255,255,0.52)', 'rgba(255,255,255,0.22)']} style={styles.imageContainer}>
                 <View style={styles.circle}>
                     <MaterialCommunityIcons name={item.icon as any} size={80} color={COLORS.text} />
                 </View>
-            </View>
+            </LinearGradient>
             <Text style={styles.title}>{item.title}</Text>
 
             {item.showStats && (
@@ -164,12 +168,14 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: 20,
-        backgroundColor: COLORS.primary,
+        backgroundColor: 'rgba(223,168,120,0.72)',
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,
         marginBottom: 20,
         flexDirection: 'row',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.4)',
     },
     backButton: {
         marginRight: 10,
@@ -189,19 +195,24 @@ const styles = StyleSheet.create({
     imageContainer: {
         width: 250,
         height: 250,
-        backgroundColor: '#FDE6C6',
+        backgroundColor: 'rgba(255,255,255,0.32)',
         borderRadius: 10,
-        borderWidth: 2,
-        borderColor: COLORS.text,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.48)',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 40,
+        shadowColor: COLORS.text,
+        shadowOffset: { width: 0, height: 16 },
+        shadowOpacity: 0.12,
+        shadowRadius: 24,
+        elevation: 8,
     },
     circle: {
         width: 150,
         height: 150,
         borderRadius: 75,
-        backgroundColor: '#E0E0E0',
+        backgroundColor: 'rgba(255,255,255,0.4)',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -221,12 +232,14 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     statCard: {
-        backgroundColor: COLORS.surface,
+        backgroundColor: 'rgba(255,255,255,0.42)',
         padding: 15,
         borderRadius: 10,
         alignItems: 'center',
         flex: 1,
         marginHorizontal: 5,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.44)',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -245,11 +258,13 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     quoteContainer: {
-        backgroundColor: COLORS.surface,
+        backgroundColor: 'rgba(255,255,255,0.42)',
         padding: 20,
         borderRadius: 15,
         marginTop: 20,
         width: '90%',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.44)',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,

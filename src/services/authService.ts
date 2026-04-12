@@ -35,9 +35,10 @@ async function buildProfile(firebaseUser: FirebaseAuthTypes.User): Promise<UserP
 
 class AuthService {
   async signUp(email: string, password: string, displayName: string): Promise<UserProfile> {
-    const credential = await createUserWithEmailAndPassword(getFirebaseAuth(), email, password);
+    const normalizedEmail = email.trim().toLowerCase();
+    const credential = await createUserWithEmailAndPassword(getFirebaseAuth(), normalizedEmail, password);
     await updateProfile(credential.user, { displayName });
-    const profile: UserProfile = { id: credential.user.uid, email, displayName };
+    const profile: UserProfile = { id: credential.user.uid, email: normalizedEmail, displayName };
     try {
       await setDoc(doc(getFirebaseDb(), 'users', credential.user.uid), profile);
     } catch (e) {
@@ -47,7 +48,8 @@ class AuthService {
   }
 
   async signIn(email: string, password: string): Promise<UserProfile> {
-    const credential = await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
+    const normalizedEmail = email.trim().toLowerCase();
+    const credential = await signInWithEmailAndPassword(getFirebaseAuth(), normalizedEmail, password);
     return buildProfile(credential.user);
   }
 
