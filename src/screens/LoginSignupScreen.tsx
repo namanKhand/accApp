@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
-    ScrollView, ActivityIndicator, Alert,
+    ScrollView, ActivityIndicator, Alert, Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -18,6 +18,23 @@ const LoginSignupScreen = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const getSocialErrorMessage = (error: any, provider: 'Google' | 'Apple') => {
+        if (error?.code === 'auth/operation-not-allowed') {
+            return `${provider} sign-in is not enabled yet in Firebase Authentication.`;
+        }
+        if (error?.code === 'auth/account-exists-with-different-credential') {
+            return 'An account already exists with this email using a different sign-in method.';
+        }
+        if (error?.code === 'auth/cancelled-popup-request' || error?.code === 'auth/popup-closed-by-user') {
+            return `${provider} sign-in was cancelled.`;
+        }
+        if (error?.message === 'auth/apple-not-supported') {
+            return 'Apple sign-in is only available on iOS devices.';
+        }
+
+        return `${provider} sign-in failed. Please try again.`;
+    };
 
     const handleLogin = async () => {
         if (!email.trim() || !password) {
@@ -38,6 +55,28 @@ const LoginSignupScreen = () => {
                                 error.code === 'auth/too-many-requests' ? 'Too many attempts. Please try again later.' :
                                     'Login failed. Please try again.';
             Alert.alert('Login Error', message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        setLoading(true);
+        try {
+            await authService.signInWithGoogle();
+        } catch (error: any) {
+            Alert.alert('Google Sign-In Error', getSocialErrorMessage(error, 'Google'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAppleSignIn = async () => {
+        setLoading(true);
+        try {
+            await authService.signInWithApple();
+        } catch (error: any) {
+            Alert.alert('Apple Sign-In Error', getSocialErrorMessage(error, 'Apple'));
         } finally {
             setLoading(false);
         }
@@ -93,12 +132,14 @@ const LoginSignupScreen = () => {
                     <Text style={styles.orText}>or sign in with</Text>
 
                     <View style={styles.socialContainer}>
-                        <TouchableOpacity style={styles.socialButton}>
+                        <TouchableOpacity style={styles.socialButton} onPress={handleGoogleSignIn} disabled={loading}>
                             <MaterialCommunityIcons name="google" size={24} color={COLORS.text} />
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.socialButton}>
-                            <MaterialCommunityIcons name="apple" size={24} color={COLORS.text} />
-                        </TouchableOpacity>
+                        {Platform.OS === 'ios' && (
+                            <TouchableOpacity style={styles.socialButton} onPress={handleAppleSignIn} disabled={loading}>
+                                <MaterialCommunityIcons name="apple" size={24} color={COLORS.text} />
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     <View style={styles.footer}>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
-    ScrollView, ActivityIndicator, Alert,
+    ScrollView, ActivityIndicator, Alert, Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,6 +21,20 @@ const CreateAccountScreen = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [agreed, setAgreed] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    const getSocialErrorMessage = (error: any, provider: 'Google' | 'Apple') => {
+        if (error?.code === 'auth/operation-not-allowed') {
+            return `${provider} sign-up is not enabled yet in Firebase Authentication.`;
+        }
+        if (error?.code === 'auth/account-exists-with-different-credential') {
+            return 'An account already exists with this email using a different sign-in method.';
+        }
+        if (error?.message === 'auth/apple-not-supported') {
+            return 'Apple sign-in is only available on iOS devices.';
+        }
+
+        return `${provider} sign-up failed. Please try again.`;
+    };
 
     const handleSignUp = async () => {
         if (!fullName.trim() || !email.trim() || !password || !confirmPassword) {
@@ -51,6 +65,28 @@ const CreateAccountScreen = () => {
                         error.code === 'auth/weak-password' ? 'Password must be at least 6 characters.' :
                             'Sign up failed. Please try again.';
             Alert.alert('Sign Up Error', message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSignUp = async () => {
+        setLoading(true);
+        try {
+            await authService.signInWithGoogle();
+        } catch (error: any) {
+            Alert.alert('Google Sign-Up Error', getSocialErrorMessage(error, 'Google'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAppleSignUp = async () => {
+        setLoading(true);
+        try {
+            await authService.signInWithApple();
+        } catch (error: any) {
+            Alert.alert('Apple Sign-Up Error', getSocialErrorMessage(error, 'Apple'));
         } finally {
             setLoading(false);
         }
@@ -143,12 +179,14 @@ const CreateAccountScreen = () => {
                     <Text style={styles.orText}>or sign up with</Text>
 
                     <View style={styles.socialContainer}>
-                        <TouchableOpacity style={styles.socialButton}>
+                        <TouchableOpacity style={styles.socialButton} onPress={handleGoogleSignUp} disabled={loading}>
                             <MaterialCommunityIcons name="google" size={24} color={COLORS.text} />
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.socialButton}>
-                            <MaterialCommunityIcons name="apple" size={24} color={COLORS.text} />
-                        </TouchableOpacity>
+                        {Platform.OS === 'ios' && (
+                            <TouchableOpacity style={styles.socialButton} onPress={handleAppleSignUp} disabled={loading}>
+                                <MaterialCommunityIcons name="apple" size={24} color={COLORS.text} />
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
             </ScrollView>

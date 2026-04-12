@@ -10,6 +10,7 @@ import auth, {
   FirebaseAuthTypes,
 } from '@react-native-firebase/auth';
 import firestore, { getFirestore, collection, doc, getDoc, setDoc } from '@react-native-firebase/firestore';
+import { Platform } from 'react-native';
 import { UserProfile } from '../types';
 
 const getFirebaseAuth = () => getAuth(getApp());
@@ -55,6 +56,36 @@ class AuthService {
 
   async signOut(): Promise<void> {
     await signOut(getFirebaseAuth());
+  }
+
+  async signInWithGoogle(): Promise<UserProfile> {
+    const provider = new auth.OAuthProvider('google.com');
+    provider.addScope('email');
+    provider.addScope('profile');
+
+    const credential = await getFirebaseAuth().signInWithProvider(provider);
+    return buildProfile(credential.user);
+  }
+
+  async signInWithApple(): Promise<UserProfile> {
+    if (Platform.OS !== 'ios') {
+      throw new Error('auth/apple-not-supported');
+    }
+
+    const provider = new auth.OAuthProvider('apple.com');
+    provider.addScope('email');
+    provider.addScope('name');
+
+    const credential = await getFirebaseAuth().signInWithProvider(provider);
+    return buildProfile(credential.user);
+  }
+
+  async verifyPasswordResetCode(code: string): Promise<string> {
+    return getFirebaseAuth().verifyPasswordResetCode(code.trim());
+  }
+
+  async confirmPasswordReset(code: string, newPassword: string): Promise<void> {
+    await getFirebaseAuth().confirmPasswordReset(code.trim(), newPassword);
   }
 
   listenToAuthState(callback: (user: UserProfile | null) => void): () => void {

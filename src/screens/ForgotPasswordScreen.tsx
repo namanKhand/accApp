@@ -63,6 +63,9 @@ const ForgotPasswordScreen = () => {
                         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('LoginSignup')}>
                             <Text style={styles.buttonText}>Back to Sign In</Text>
                         </TouchableOpacity>
+                        <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('ResetPassword')}>
+                            <Text style={styles.secondaryButtonText}>I already have a reset link</Text>
+                        </TouchableOpacity>
                         <TouchableOpacity onPress={handleSend} style={styles.resendButton}>
                             <Text style={styles.resendText}>Didn't receive it? Resend</Text>
                         </TouchableOpacity>
@@ -175,6 +178,8 @@ const styles = StyleSheet.create({
     successText: { fontSize: 15, color: COLORS.secondary, textAlign: 'center', lineHeight: 22, marginBottom: 40 },
     bold: { fontWeight: 'bold', color: COLORS.text },
     resendButton: { marginTop: 16 },
+    secondaryButton: { marginTop: 14 },
+    secondaryButtonText: { color: COLORS.text, fontSize: 14, fontWeight: '600' },
     resendText: { color: COLORS.primary, fontSize: 14, textDecorationLine: 'underline' },
 });
 
