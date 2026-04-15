@@ -55,7 +55,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addGoal = async (goal: Goal) => {
     await goalService.createGoal(goal);
-    await refreshData();
+    // Update goals state immediately so InviteFriendScreen sees the goal
+    // right after navigation — don't rely on refreshData succeeding.
+    setGoals(prev => [...prev, goal]);
+    refreshData().catch(e => console.error('refreshData after addGoal:', e));
   };
 
   const recordCheckIn = async (checkIn: Omit<CheckIn, 'id'>) => {
@@ -69,8 +72,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const sendInvite = async (invite: Omit<PartnerInvite, 'id' | 'status' | 'createdAt'>) => {
-    await inviteService.createInvite(invite);
-    await refreshData();
+    const id = await inviteService.createInvite(invite);
+    // Update sentInvites immediately — don't rely on refreshData succeeding
+    // (refreshData makes 4+ parallel reads; any failure silently skips setSentInvites)
+    const newInvite: PartnerInvite = {
+      ...invite,
+      id,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    setSentInvites(prev => [...prev, newInvite]);
+    // Background refresh to sync everything else
+    refreshData().catch(e => console.error('refreshData after sendInvite:', e));
   };
 
   const acceptInvite = async (invite: PartnerInvite) => {

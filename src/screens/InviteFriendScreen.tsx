@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboard, ActivityIndicator, Alert, Linking } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboard, ActivityIndicator, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import emailjs from '@emailjs/react-native';
 import { COLORS } from '../constants/colors';
-import { RootStackParamList } from '../navigation/RootNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'InviteFriend'>;
+// ── EmailJS config ──────────────────────────────────────────────────────────
+// Sign up at emailjs.com → add a Gmail service → create a template → paste IDs below
+const EMAILJS_SERVICE_ID  = 'service_vwak5gi';
+const EMAILJS_TEMPLATE_ID = 'template_4j2272a';
+const EMAILJS_PUBLIC_KEY  = 'IVGtOgXEO_-HeKb7C';
+// ────────────────────────────────────────────────────────────────────────────
 
 const InviteFriendScreen = () => {
-    const navigation = useNavigation<NavigationProp>();
     const { user, goals, sendInvite } = useApp();
     const [step, setStep] = useState(0);
     const [friendName, setFriendName] = useState('');
@@ -25,6 +28,8 @@ const InviteFriendScreen = () => {
 
         setLoading(true);
         try {
+            // 1. Save invite to Firestore — this also updates sentInvites state
+            // immediately so RootNavigator navigates to WaitingForPartner right away.
             await sendInvite({
                 senderId: user.id,
                 senderName: user.displayName || 'Your Friend',
@@ -32,31 +37,33 @@ const InviteFriendScreen = () => {
                 goalId: currentGoal.id,
             });
 
-            // Open native mail app with pre-filled invite email
-            const subject = encodeURIComponent('Join me on 2gether — I need you as my accountability partner!');
-            const body = encodeURIComponent(
-                `Hi ${friendName},\n\n` +
-                `Studies show that accountability can increase the likelihood of achieving your goals to as high as 95%!\n\n` +
-                `I recently created a goal and want you to keep me accountable: ${currentGoal.title}\n\n` +
-                `Please download the 2gether app and sign up with this exact email address: ${friendEmail.trim()}\n\n` +
-                `Once you sign up, you'll automatically be linked to my goal.\n\n` +
-                `Your friend,\n${user.displayName}`
-            );
-            const mailtoUrl = `mailto:${friendEmail.trim()}?subject=${subject}&body=${body}`;
-
-            const canOpen = await Linking.canOpenURL(mailtoUrl);
-            if (canOpen) {
-                await Linking.openURL(mailtoUrl);
-            } else {
+            // 2. Fire-and-forget: send the email — don't block navigation on it.
+            emailjs.send(
+                EMAILJS_SERVICE_ID,
+                EMAILJS_TEMPLATE_ID,
+                {
+                    to_name:      friendName,
+                    to_email:     friendEmail.trim(),
+                    from_name:    user.displayName || 'Your Friend',
+                    goal_title:   currentGoal.title,
+                    signup_email: friendEmail.trim(),
+                },
+                { publicKey: EMAILJS_PUBLIC_KEY },
+            ).then(result => {
+                console.log('[EmailJS] send result:', result.status, result.text);
+            }).catch((error: any) => {
+                console.error('[EmailJS] send failed — status:', error?.status, '| text:', error?.text, '| message:', error?.message);
                 Alert.alert(
-                    'No Mail App Found',
-                    'Your invite has been saved. Please email your partner manually at: ' + friendEmail.trim()
+                    'Invite Saved',
+                    `Your invite was saved but the email could not be sent (${error?.text || error?.message || 'unknown error'}). Ask your partner to sign up with: ${friendEmail.trim()}`,
                 );
-            }
-            // RootNavigator will automatically detect the sent invite and show WaitingForPartner
-        } catch (error) {
-            console.error('Error sending invite:', error);
-            Alert.alert('Error', 'Failed to send invite. Please try again.');
+            });
+
+            // RootNavigator detects sentInvites.length > 0 and switches to WaitingForPartner.
+            // setLoading(false) intentionally omitted — component unmounts on navigation.
+        } catch (error: any) {
+            console.error('[sendInvite] failed:', error?.code, error?.message);
+            Alert.alert('Error', `Could not save your invite: ${error?.message || 'unknown error'}. Please try again.`);
             setLoading(false);
         }
     };
@@ -80,7 +87,7 @@ const InviteFriendScreen = () => {
                             value={friendName}
                             onChangeText={setFriendName}
                             returnKeyType="done"
-                            blurOnSubmit={true}
+                            submitBehavior="blurAndSubmit"
                             onSubmitEditing={() => Keyboard.dismiss()}
                         />
                     </View>
@@ -96,7 +103,7 @@ const InviteFriendScreen = () => {
                             keyboardType="email-address"
                             autoCapitalize="none"
                             returnKeyType="done"
-                            blurOnSubmit={true}
+                            submitBehavior="blurAndSubmit"
                             onSubmitEditing={() => Keyboard.dismiss()}
                         />
                         <Text style={styles.helperText}>
@@ -160,6 +167,7 @@ const InviteFriendScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <LinearGradient colors={COLORS.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {renderContent()}
             </ScrollView>
@@ -213,15 +221,17 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
     },
     input: {
-        backgroundColor: COLORS.surface,
-        borderRadius: 10,
+        backgroundColor: COLORS.glassBgStrong,
+        borderRadius: 14,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorderStrong,
         padding: 15,
         fontSize: 16,
         color: COLORS.text,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
         elevation: 2,
     },
     helperText: {
@@ -232,22 +242,31 @@ const styles = StyleSheet.create({
     },
     button: {
         backgroundColor: COLORS.primary,
-        paddingVertical: 12,
+        paddingVertical: 13,
         paddingHorizontal: 40,
-        borderRadius: 8,
+        borderRadius: 14,
         marginTop: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.38)',
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.35,
+        shadowRadius: 10,
+        elevation: 5,
     },
     sendButton: {
         backgroundColor: COLORS.primary,
         paddingVertical: 15,
         paddingHorizontal: 50,
-        borderRadius: 10,
+        borderRadius: 14,
         marginTop: 20,
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 4,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.38)',
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.38,
+        shadowRadius: 10,
+        elevation: 5,
     },
     disabledButton: {
         opacity: 0.5,
@@ -258,16 +277,18 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     previewCard: {
-        backgroundColor: COLORS.surface,
-        padding: 20,
-        borderRadius: 15,
+        backgroundColor: COLORS.glassBg,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorder,
+        padding: 22,
+        borderRadius: 20,
         width: '100%',
-        marginBottom: 30,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
+        marginBottom: 28,
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.14,
+        shadowRadius: 20,
+        elevation: 5,
     },
     previewText: {
         fontSize: 15,

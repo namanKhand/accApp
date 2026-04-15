@@ -10,8 +10,12 @@ import auth, {
   FirebaseAuthTypes,
 } from '@react-native-firebase/auth';
 import firestore, { getFirestore, collection, doc, getDoc, setDoc } from '@react-native-firebase/firestore';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { Platform } from 'react-native';
 import { UserProfile } from '../types';
+
+// WEB_CLIENT_ID from Firebase Console → Authentication → Sign-in method → Google → Web client ID
+const GOOGLE_WEB_CLIENT_ID = '430323754842-REPLACE_WITH_WEB_CLIENT_ID.apps.googleusercontent.com';
 
 const getFirebaseAuth = () => getAuth(getApp());
 const getFirebaseDb = () => getFirestore(getApp());
@@ -59,11 +63,26 @@ class AuthService {
   }
 
   async signInWithGoogle(): Promise<UserProfile> {
-    const provider = new auth.OAuthProvider('google.com');
-    provider.addScope('email');
-    provider.addScope('profile');
-
-    const credential = await getFirebaseAuth().signInWithProvider(provider);
+    GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID, offlineAccess: false });
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    const signInResult = await GoogleSignin.signIn();
+    const idToken = signInResult.data?.idToken;
+    if (!idToken) throw new Error('Google Sign-In failed: no ID token returned.');
+    const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+    const credential = await getFirebaseAuth().signInWithCredential(googleCredential);
+    // Persist display name & photo if this is a new user
+    if (credential.user.displayName || credential.user.photoURL) {
+      try {
+        await setDoc(doc(getFirebaseDb(), 'users', credential.user.uid), {
+          id: credential.user.uid,
+          email: credential.user.email ?? '',
+          displayName: credential.user.displayName ?? 'User',
+          photoURL: credential.user.photoURL ?? null,
+        }, { merge: true });
+      } catch (e) {
+        console.error('Firestore profile upsert failed after Google sign-in:', e);
+      }
+    }
     return buildProfile(credential.user);
   }
 

@@ -63,12 +63,7 @@ const MainTabs = () => (
     <Tab.Screen
       name="Me"
       component={HomeScreen}
-      options={{
-        tabBarLabel: 'ME',
-        tabBarIcon: ({ focused }) => (
-          <MaterialCommunityIcons name="home-outline" size={30} color={COLORS.text} />
-        )
-      }}
+      options={{ tabBarLabel: 'ME' }}
     />
     <Tab.Screen
       name="Settings"

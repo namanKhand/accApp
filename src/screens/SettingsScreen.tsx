@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../constants/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -50,6 +51,7 @@ const SettingsScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <LinearGradient colors={COLORS.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Settings</Text>
             </View>
@@ -117,38 +119,47 @@ const styles = StyleSheet.create({
         padding: 20,
         alignItems: 'center',
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(0,0,0,0.05)',
+        borderBottomColor: 'rgba(255,255,255,0.50)',
     },
     headerTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
         color: COLORS.text,
+        letterSpacing: 0.3,
     },
     content: {
         padding: 20,
     },
     sectionHeader: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: 'bold',
         color: COLORS.secondary,
-        marginBottom: 10,
+        marginBottom: 8,
         marginTop: 10,
-        marginLeft: 10,
+        marginLeft: 4,
         textTransform: 'uppercase',
+        letterSpacing: 1,
     },
     section: {
-        backgroundColor: COLORS.surface,
-        borderRadius: 15,
+        backgroundColor: COLORS.glassBg,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorder,
+        borderRadius: 20,
         marginBottom: 20,
         overflow: 'hidden',
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+        elevation: 4,
     },
     settingItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: 15,
+        padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: 'rgba(255,255,255,0.55)',
     },
     settingLeft: {
         flexDirection: 'row',
@@ -174,9 +185,11 @@ const styles = StyleSheet.create({
     },
     logoutButton: {
         marginTop: 20,
-        backgroundColor: '#FFE5E5',
+        backgroundColor: 'rgba(176,0,32,0.08)',
+        borderWidth: 1.5,
+        borderColor: 'rgba(176,0,32,0.18)',
         padding: 15,
-        borderRadius: 15,
+        borderRadius: 16,
         alignItems: 'center',
     },
     logoutText: {

@@ -92,7 +92,7 @@ export const RootNavigator = () => {
           <Stack.Screen
             name="ForgotPassword"
             component={ForgotPasswordScreen}
-            options={{ title: 'Reset Password' }}
+            options={{ title: 'Forgot Password' }}
           />
           <Stack.Screen
             name="ResetPassword"
@@ -126,11 +126,33 @@ export const RootNavigator = () => {
             />
           ) : isWaitingForPartner ? (
             // User sent an invite and is waiting for them to join
-            <Stack.Screen
-              name="WaitingForPartner"
-              component={WaitingForPartnerScreen}
-              options={{ headerShown: false }}
-            />
+            <>
+              <Stack.Screen
+                name="WaitingForPartner"
+                component={WaitingForPartnerScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="Main"
+                component={MainTabs}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="GoalSetup"
+                component={GoalSetupScreen}
+                options={{ title: 'Set Your Goal' }}
+              />
+              <Stack.Screen
+                name="InviteFriend"
+                component={InviteFriendScreen}
+                options={{ title: 'Invite Partner', headerLeft: () => null, gestureEnabled: false }}
+              />
+              <Stack.Screen
+                name="ContactUs"
+                component={ContactUsScreen}
+                options={{ title: 'Contact Us' }}
+              />
+            </>
           ) : (
             // User has no active goal and no invites -> encourage them to create a goal, but allow skip
             <>

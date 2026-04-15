@@ -1,13 +1,19 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../constants/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import { RootStackParamList } from '../navigation/RootNavigator';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const FriendsScreen = () => {
     const { user, goals, checkIns } = useApp();
+    const navigation = useNavigation<NavigationProp>();
 
     // Get the shared goal (one where we have an assigned partner)
     const partnerGoal = goals.find(g => g.partnerId && g.partnerId !== '');
@@ -24,26 +30,32 @@ const FriendsScreen = () => {
     const hasPartner = partnerGoal && partnerCheckIns.length > 0;
 
     if (!hasPartner) {
+        const hasGoal = goals.length > 0;
         return (
             <SafeAreaView style={styles.container}>
+                <LinearGradient colors={COLORS.backgroundGradient} style={StyleSheet.absoluteFillObject} />
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>You & Me</Text>
                 </View>
 
                 <View style={styles.content}>
                     <View style={styles.iconCircle}>
-                        <MaterialCommunityIcons name="account-check-outline" size={40} color={COLORS.text} />
+                        <MaterialCommunityIcons name="account-plus-outline" size={40} color={COLORS.text} />
                     </View>
 
                     <Text style={styles.title}>No Partner Yet</Text>
 
                     <Text style={styles.subtitle}>
-                        No invites yet. Have your friend try again or check back later.
+                        Accountability partners increase your chances of reaching a goal to 95%. Invite someone you trust!
                     </Text>
 
-                    <Text style={styles.description}>
-                        Ask your friend to accept the invite, or switch to Partner's Perspective in Dev Mode to see how they view your goal.
-                    </Text>
+                    <TouchableOpacity
+                        style={styles.inviteButton}
+                        onPress={() => navigation.getParent()?.navigate(hasGoal ? 'InviteFriend' : 'GoalSetup')}
+                    >
+                        <MaterialCommunityIcons name="email-fast-outline" size={20} color={COLORS.surface} />
+                        <Text style={styles.inviteButtonText}>Invite a Friend</Text>
+                    </TouchableOpacity>
                 </View>
             </SafeAreaView>
         );
@@ -145,9 +157,14 @@ const styles = StyleSheet.create({
         marginHorizontal: 20,
         marginTop: 8,
         borderRadius: 22,
-        backgroundColor: 'rgba(255,255,255,0.34)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.42)',
+        backgroundColor: COLORS.glassBg,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorder,
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.10,
+        shadowRadius: 8,
+        elevation: 4,
     },
     logoText: {
         position: 'absolute',
@@ -166,11 +183,16 @@ const styles = StyleSheet.create({
         paddingBottom: 100,
     },
     card: {
-        borderRadius: 15,
-        padding: 15,
+        borderRadius: 20,
+        padding: 18,
         marginBottom: 20,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.44)',
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorder,
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.14,
+        shadowRadius: 18,
+        elevation: 5,
     },
     cardTitle: {
         fontSize: 14,
@@ -196,16 +218,16 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     checkInCard: {
-        borderRadius: 15,
-        padding: 15,
+        borderRadius: 20,
+        padding: 16,
         marginBottom: 15,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.44)',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
-        elevation: 6,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorder,
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.13,
+        shadowRadius: 18,
+        elevation: 5,
     },
     checkInHeader: {
         flexDirection: 'row',
@@ -298,6 +320,27 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 20,
         opacity: 0.8,
+    },
+    inviteButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: COLORS.primary,
+        paddingVertical: 14,
+        paddingHorizontal: 32,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.38)',
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.35,
+        shadowRadius: 10,
+        elevation: 5,
+    },
+    inviteButtonText: {
+        color: COLORS.surface,
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 

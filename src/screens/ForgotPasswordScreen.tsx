@@ -7,8 +7,8 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { getApp } from '@react-native-firebase/app';
-import auth, { sendPasswordResetEmail, getAuth } from '@react-native-firebase/auth';
+import { LinearGradient } from 'expo-linear-gradient';
+import auth from '@react-native-firebase/auth';
 import { COLORS } from '../constants/colors';
 import { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -28,13 +28,20 @@ const ForgotPasswordScreen = () => {
 
         setLoading(true);
         try {
-            await sendPasswordResetEmail(getAuth(getApp()), email.trim().toLowerCase());
+            await auth().sendPasswordResetEmail(email.trim().toLowerCase(), {
+                handleCodeInApp: false,
+                // continue URL shown after password reset in the browser
+                url: 'https://accapp-bd7a0.firebaseapp.com',
+            });
+            console.log('[ForgotPassword] Reset email sent (or silently skipped) for:', email.trim().toLowerCase());
             setSent(true);
         } catch (error: any) {
+            console.error('[ForgotPassword] Error:', error.code, error.message);
             const message =
                 error.code === 'auth/user-not-found' ? 'No account found with this email.' :
                 error.code === 'auth/invalid-email' ? 'Please enter a valid email address.' :
-                'Something went wrong. Please try again.';
+                error.code === 'auth/too-many-requests' ? 'Too many attempts. Please wait a few minutes and try again.' :
+                `Something went wrong (${error.code ?? 'unknown'}). Please try again.`;
             Alert.alert('Error', message);
         } finally {
             setLoading(false);
@@ -43,6 +50,7 @@ const ForgotPasswordScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <LinearGradient colors={COLORS.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <MaterialCommunityIcons name="chevron-left" size={30} color={COLORS.text} />
@@ -59,12 +67,13 @@ const ForgotPasswordScreen = () => {
                         <Text style={styles.successText}>
                             We sent a password reset link to{'\n'}
                             <Text style={styles.bold}>{email}</Text>
+                            {'\n\n'}Check spam if you don't see it. Then copy the link and tap below to set your new password.
                         </Text>
-                        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('LoginSignup')}>
-                            <Text style={styles.buttonText}>Back to Sign In</Text>
+                        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('ResetPassword')}>
+                            <Text style={styles.buttonText}>Enter Reset Link</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('ResetPassword')}>
-                            <Text style={styles.secondaryButtonText}>I already have a reset link</Text>
+                        <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('LoginSignup')}>
+                            <Text style={styles.secondaryButtonText}>Back to Sign In</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={handleSend} style={styles.resendButton}>
                             <Text style={styles.resendText}>Didn't receive it? Resend</Text>
@@ -120,25 +129,30 @@ const styles = StyleSheet.create({
         marginHorizontal: 20,
         marginTop: 8,
         borderRadius: 22,
-        backgroundColor: 'rgba(255,255,255,0.34)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.42)',
+        backgroundColor: COLORS.glassBg,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorder,
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.10,
+        shadowRadius: 8,
+        elevation: 4,
     },
-    headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text },
+    headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text, letterSpacing: 0.2 },
     scrollContent: { flexGrow: 1, padding: 20, justifyContent: 'center' },
     form: {
         alignItems: 'center',
         width: '100%',
-        backgroundColor: 'rgba(255,255,255,0.36)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.44)',
-        borderRadius: 28,
-        padding: 24,
-        shadowColor: COLORS.text,
-        shadowOffset: { width: 0, height: 16 },
-        shadowOpacity: 0.12,
-        shadowRadius: 24,
-        elevation: 8,
+        backgroundColor: COLORS.glassBg,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorder,
+        borderRadius: 32,
+        padding: 28,
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 20 },
+        shadowOpacity: 0.18,
+        shadowRadius: 32,
+        elevation: 10,
     },
     description: {
         fontSize: 15,
@@ -150,26 +164,33 @@ const styles = StyleSheet.create({
     inputContainer: { width: '100%', marginBottom: 25 },
     label: { fontSize: 16, color: COLORS.text, marginBottom: 8, fontWeight: '500' },
     input: {
-        backgroundColor: 'rgba(255,255,255,0.42)',
+        backgroundColor: COLORS.glassBgStrong,
         borderRadius: 14,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.5)',
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorderStrong,
         padding: 15,
         fontSize: 16,
         color: COLORS.text,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
         elevation: 2,
     },
     button: {
-        backgroundColor: 'rgba(223,168,120,0.92)',
+        backgroundColor: COLORS.primary,
         paddingVertical: 14,
         paddingHorizontal: 40,
-        borderRadius: 12,
+        borderRadius: 14,
         alignItems: 'center',
         minWidth: 200,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.38)',
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.35,
+        shadowRadius: 10,
+        elevation: 5,
     },
     disabledButton: { opacity: 0.6 },
     buttonText: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },

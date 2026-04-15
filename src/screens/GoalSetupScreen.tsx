@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../constants/colors';
@@ -97,7 +98,7 @@ const GoalSetupScreen = () => {
                                 onChangeText={setAction}
                                 multiline
                                 returnKeyType="done"
-                                blurOnSubmit={true}
+                                submitBehavior="blurAndSubmit"
                                 onSubmitEditing={() => Keyboard.dismiss()}
                             />
                         </View>
@@ -159,7 +160,7 @@ const GoalSetupScreen = () => {
                                 onChangeText={setMotivation}
                                 multiline
                                 returnKeyType="done"
-                                blurOnSubmit={true}
+                                submitBehavior="blurAndSubmit"
                                 onSubmitEditing={() => Keyboard.dismiss()}
                             />
                         </View>
@@ -247,6 +248,7 @@ const GoalSetupScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <LinearGradient colors={COLORS.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <View style={styles.progressBar}>
                 {/* Simple progress bar */}
                 <View style={[styles.progressFill, { width: `${(step / 4) * 100}%` }]} />
@@ -265,7 +267,7 @@ const styles = StyleSheet.create({
     },
     progressBar: {
         height: 5,
-        backgroundColor: '#E0E0E0',
+        backgroundColor: 'rgba(196,181,168,0.4)',
         width: '100%',
     },
     progressFill: {
@@ -315,34 +317,49 @@ const styles = StyleSheet.create({
     },
     madLibContainer: {
         width: '100%',
-        backgroundColor: COLORS.surface,
+        backgroundColor: COLORS.glassBg,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorder,
         padding: 20,
-        borderRadius: 15,
-        marginBottom: 30,
+        borderRadius: 20,
+        marginBottom: 28,
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+        elevation: 4,
     },
     madLibText: {
         fontSize: 16,
         color: COLORS.text,
         marginBottom: 10,
         fontWeight: 'bold',
+        opacity: 0.75,
     },
     input: {
-        backgroundColor: COLORS.surface,
-        borderRadius: 10,
+        backgroundColor: COLORS.glassBgStrong,
+        borderRadius: 12,
         padding: 15,
         fontSize: 16,
         color: COLORS.text,
-        borderWidth: 1,
-        borderColor: COLORS.secondary,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorderStrong,
         width: '100%',
-        marginBottom: 20,
+        marginBottom: 8,
     },
     button: {
         backgroundColor: COLORS.primary,
-        paddingVertical: 12,
+        paddingVertical: 13,
         paddingHorizontal: 40,
-        borderRadius: 8,
+        borderRadius: 14,
         marginTop: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.38)',
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.35,
+        shadowRadius: 10,
+        elevation: 5,
     },
     buttonText: {
         color: COLORS.surface,
@@ -359,10 +376,17 @@ const styles = StyleSheet.create({
     },
     daysContainer: {
         width: '100%',
-        backgroundColor: COLORS.surface,
+        backgroundColor: COLORS.glassBg,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorder,
         padding: 20,
-        borderRadius: 15,
-        marginBottom: 30,
+        borderRadius: 20,
+        marginBottom: 28,
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+        elevation: 4,
     },
     checkboxRow: {
         flexDirection: 'row',
@@ -383,9 +407,11 @@ const styles = StyleSheet.create({
     skipCheckbox: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.surface,
+        backgroundColor: COLORS.glassBg,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorder,
         padding: 15,
-        borderRadius: 10,
+        borderRadius: 14,
         width: '100%',
         marginBottom: 20,
     },
@@ -395,11 +421,18 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     summaryCard: {
-        backgroundColor: COLORS.surface,
-        padding: 20,
-        borderRadius: 15,
+        backgroundColor: COLORS.glassBg,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorder,
+        padding: 22,
+        borderRadius: 20,
         marginBottom: 20,
         width: '100%',
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.14,
+        shadowRadius: 18,
+        elevation: 5,
     },
     summaryText: {
         fontSize: 16,

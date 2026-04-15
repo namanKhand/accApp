@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS } from '../constants/colors';
@@ -23,6 +23,13 @@ const HomeScreen = () => {
     const [checkOutImage, setCheckOutImage] = useState<string | null>(null);
     const [checkInTime, setCheckInTime] = useState<string | null>(null);
     const [checkOutTime, setCheckOutTime] = useState<string | null>(null);
+    const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
+        };
+    }, []);
 
     const countdown = currentGoal ? getCountdown(currentGoal.endDate) : null;
 
@@ -148,7 +155,7 @@ const HomeScreen = () => {
                     Alert.alert('Success', 'Check-out complete! Great job today!');
 
                     // Reset for next check-in
-                    setTimeout(() => {
+                    resetTimeoutRef.current = setTimeout(() => {
                         setCheckInImage(null);
                         setCheckOutImage(null);
                         setCheckInTime(null);
@@ -269,10 +276,12 @@ const HomeScreen = () => {
                             </TouchableOpacity>
                         </>
                     ) : (
-                        <TouchableOpacity onPress={() => navigation.navigate('InviteFriend')}>
-                            <Text style={[styles.partnerName, { textDecorationLine: 'underline', color: COLORS.primary }]}>
-                                Add a Partner
-                            </Text>
+                        <TouchableOpacity
+                            style={styles.inviteButton}
+                            onPress={() => navigation.getParent()?.navigate(currentGoal ? 'InviteFriend' : 'GoalSetup')}
+                        >
+                            <MaterialCommunityIcons name="email-fast-outline" size={18} color={COLORS.surface} />
+                            <Text style={styles.inviteButtonText}>Invite a Friend</Text>
                         </TouchableOpacity>
                     )}
                 </LinearGradient>
@@ -501,6 +510,28 @@ const styles = StyleSheet.create({
     editButtonTextSmall: {
         color: COLORS.surface,
         fontSize: 12,
+        fontWeight: 'bold',
+    },
+    inviteButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: COLORS.primary,
+        paddingVertical: 11,
+        paddingHorizontal: 24,
+        borderRadius: 14,
+        marginTop: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.38)',
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.30,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    inviteButtonText: {
+        color: COLORS.surface,
+        fontSize: 14,
         fontWeight: 'bold',
     },
 });

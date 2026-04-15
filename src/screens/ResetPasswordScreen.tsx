@@ -14,6 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../constants/colors';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { authService } from '../services/authService';
@@ -148,6 +149,7 @@ const ResetPasswordScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <LinearGradient colors={COLORS.backgroundGradient} style={StyleSheet.absoluteFillObject} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <MaterialCommunityIcons name="chevron-left" size={30} color={COLORS.text} />
@@ -245,23 +247,28 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 8,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.34)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.42)',
+    backgroundColor: COLORS.glassBg,
+    borderWidth: 1.5,
+    borderColor: COLORS.glassBorder,
+    shadowColor: COLORS.primaryDark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.10,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text },
+  headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text, letterSpacing: 0.2 },
   scrollContent: { flexGrow: 1, padding: 20, justifyContent: 'center' },
   card: {
-    backgroundColor: 'rgba(255,255,255,0.36)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.44)',
-    borderRadius: 28,
-    padding: 24,
-    shadowColor: COLORS.text,
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 8,
+    backgroundColor: COLORS.glassBg,
+    borderWidth: 1.5,
+    borderColor: COLORS.glassBorder,
+    borderRadius: 32,
+    padding: 28,
+    shadowColor: COLORS.primaryDark,
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.18,
+    shadowRadius: 32,
+    elevation: 10,
   },
   description: {
     fontSize: 15,
@@ -273,10 +280,10 @@ const styles = StyleSheet.create({
   inputContainer: { width: '100%', marginBottom: 20 },
   label: { fontSize: 16, color: COLORS.text, marginBottom: 8, fontWeight: '500' },
   input: {
-    backgroundColor: 'rgba(255,255,255,0.42)',
+    backgroundColor: COLORS.glassBgStrong,
     borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.5)',
+    borderWidth: 1.5,
+    borderColor: COLORS.glassBorderStrong,
     padding: 15,
     fontSize: 16,
     color: COLORS.text,
@@ -286,12 +293,19 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   primaryButton: {
-    backgroundColor: 'rgba(223,168,120,0.92)',
+    backgroundColor: COLORS.primary,
     paddingVertical: 14,
     paddingHorizontal: 40,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.38)',
+    shadowColor: COLORS.primaryDark,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 5,
   },
   disabledButton: { opacity: 0.6 },
   primaryButtonText: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },

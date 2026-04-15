@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../constants/colors';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getHasSeenOnboarding } from '../utils/onboarding';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Launch'>;
@@ -19,9 +20,7 @@ const LaunchScreen = () => {
             const hasSeenOnboarding = await getHasSeenOnboarding();
 
             const timer = setTimeout(() => {
-                if (!active) {
-                    return;
-                }
+                if (!active) return;
                 navigation.replace(hasSeenOnboarding ? 'LoginSignup' : 'Onboarding');
             }, 1800);
 
@@ -29,9 +28,7 @@ const LaunchScreen = () => {
         };
 
         let cleanup: (() => void) | undefined;
-        boot().then((result) => {
-            cleanup = result;
-        });
+        boot().then((result) => { cleanup = result; });
 
         return () => {
             active = false;
@@ -40,59 +37,70 @@ const LaunchScreen = () => {
     }, [navigation]);
 
     return (
-        <View style={styles.container}>
+        <LinearGradient colors={COLORS.backgroundGradient} style={styles.container}>
             <View style={styles.content}>
-                {/* Placeholder for Fist Bump Illustration */}
-                <View style={styles.imagePlaceholder}>
-                    <MaterialCommunityIcons name="handshake" size={120} color={COLORS.primary} />
-                </View>
+                <LinearGradient
+                    colors={['rgba(255,255,255,0.68)', 'rgba(255,255,255,0.30)']}
+                    style={styles.iconGlow}
+                >
+                    <MaterialCommunityIcons name="handshake" size={110} color={COLORS.primary} />
+                </LinearGradient>
 
                 <Text style={styles.title}>2gether</Text>
                 <Text style={styles.subtitle}>Achieve More Together</Text>
             </View>
-        </View>
+        </LinearGradient>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
         justifyContent: 'center',
         alignItems: 'center',
     },
     content: {
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.38)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.45)',
-        borderRadius: 28,
-        paddingHorizontal: 36,
-        paddingVertical: 40,
-        shadowColor: COLORS.text,
-        shadowOffset: { width: 0, height: 16 },
-        shadowOpacity: 0.12,
-        shadowRadius: 24,
-        elevation: 8,
+        backgroundColor: COLORS.glassBg,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorder,
+        borderRadius: 36,
+        paddingHorizontal: 44,
+        paddingVertical: 48,
+        shadowColor: COLORS.primaryDark,
+        shadowOffset: { width: 0, height: 20 },
+        shadowOpacity: 0.20,
+        shadowRadius: 36,
+        elevation: 12,
     },
-    imagePlaceholder: {
-        width: 200,
-        height: 200,
+    iconGlow: {
+        width: 180,
+        height: 180,
+        borderRadius: 90,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20,
-        // In a real app, this would be an Image component
+        marginBottom: 28,
+        borderWidth: 1.5,
+        borderColor: COLORS.glassBorderStrong,
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+        elevation: 8,
     },
     title: {
-        fontSize: 48,
+        fontSize: 52,
         fontWeight: 'bold',
         color: COLORS.text,
-        marginBottom: 10,
+        letterSpacing: 1,
+        marginBottom: 8,
     },
     subtitle: {
-        fontSize: 18,
+        fontSize: 17,
         color: COLORS.text,
         fontWeight: '500',
+        letterSpacing: 0.4,
+        opacity: 0.75,
     },
 });
 
