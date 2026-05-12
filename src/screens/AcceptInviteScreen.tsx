@@ -1,24 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../constants/colors';
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
+import { goalService } from '../services/goalService';
+import { Goal } from '../types';
 
 const AcceptInviteScreen = () => {
-    const { receivedInvites, acceptInvite, user } = useApp();
+    const { receivedInvites, acceptInvite } = useApp();
     const [loading, setLoading] = useState(false);
+    const [partnerGoal, setPartnerGoal] = useState<Goal | null>(null);
 
-    // We only show this screen if receivedInvites.length > 0 (handled by RootNavigator)
     const pendingInvite = receivedInvites[0];
+
+    useEffect(() => {
+        if (pendingInvite?.goalId) {
+            goalService.getGoalById(pendingInvite.goalId).then(setPartnerGoal);
+        }
+    }, [pendingInvite?.goalId]);
 
     const handleAccept = async () => {
         if (!pendingInvite) return;
-
         setLoading(true);
         try {
             await acceptInvite(pendingInvite);
-            // RootNavigator will automatically unmount this screen once the goal is set
         } catch (error) {
             console.error('Error accepting invite:', error);
             Alert.alert('Error', 'Failed to accept invitation. Please try again.');
@@ -55,7 +61,12 @@ const AcceptInviteScreen = () => {
                     <View style={styles.divider} />
 
                     <Text style={styles.subtitle}>Their Goal:</Text>
-                    <Text style={styles.goalTitle}>View after accepting</Text>
+                    <Text style={styles.goalTitle}>
+                        {partnerGoal ? partnerGoal.title : 'Loading goal...'}
+                    </Text>
+                    {partnerGoal?.description ? (
+                        <Text style={styles.goalDescription}>{partnerGoal.description}</Text>
+                    ) : null}
 
                     <View style={styles.divider} />
 
@@ -85,110 +96,40 @@ const AcceptInviteScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.background,
-    },
-    content: {
-        flex: 1,
-        padding: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+    container: { flex: 1, backgroundColor: COLORS.background },
+    content: { flex: 1, padding: 20, alignItems: 'center', justifyContent: 'center' },
     iconContainer: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: 80, height: 80, borderRadius: 40,
         backgroundColor: COLORS.surface,
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: 'center', justifyContent: 'center',
         marginBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
     },
-    emoji: {
-        fontSize: 40,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: COLORS.text,
-        marginBottom: 30,
-        textAlign: 'center',
-    },
+    emoji: { fontSize: 40 },
+    title: { fontSize: 28, fontWeight: 'bold', color: COLORS.text, marginBottom: 30, textAlign: 'center' },
     card: {
-        backgroundColor: COLORS.surface,
-        padding: 25,
-        borderRadius: 15,
-        width: '100%',
-        alignItems: 'center',
-        marginBottom: 30,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
+        backgroundColor: COLORS.surface, padding: 25, borderRadius: 15,
+        width: '100%', alignItems: 'center', marginBottom: 30,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
     },
-    description: {
-        fontSize: 16,
-        color: COLORS.text,
-        textAlign: 'center',
-        lineHeight: 24,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: '#EEEEEE',
-        width: '100%',
-        marginVertical: 15,
-    },
-    subtitle: {
-        fontSize: 14,
-        color: COLORS.secondary,
-        marginBottom: 5,
-    },
-    goalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: COLORS.text,
-        textAlign: 'center',
-    },
-    bold: {
-        fontWeight: 'bold',
-    },
+    description: { fontSize: 16, color: COLORS.text, textAlign: 'center', lineHeight: 24 },
+    divider: { height: 1, backgroundColor: '#EEEEEE', width: '100%', marginVertical: 15 },
+    subtitle: { fontSize: 14, color: COLORS.secondary, marginBottom: 5 },
+    goalTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.text, textAlign: 'center' },
+    goalDescription: { fontSize: 14, color: COLORS.secondary, textAlign: 'center', marginTop: 6 },
+    bold: { fontWeight: 'bold' },
     acceptButton: {
-        backgroundColor: COLORS.primary,
-        paddingVertical: 15,
-        paddingHorizontal: 40,
-        borderRadius: 10,
-        width: '100%',
-        alignItems: 'center',
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 4,
+        backgroundColor: COLORS.primary, paddingVertical: 15, paddingHorizontal: 40,
+        borderRadius: 10, width: '100%', alignItems: 'center',
+        shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3, shadowRadius: 5, elevation: 4,
     },
-    disabledButton: {
-        opacity: 0.7,
-    },
-    acceptButtonText: {
-        color: COLORS.surface,
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    logoutButton: {
-        marginTop: 20,
-        padding: 10,
-    },
-    logoutText: {
-        color: COLORS.secondary,
-        fontSize: 16,
-        fontWeight: 'bold',
-        textDecorationLine: 'underline',
-    },
+    disabledButton: { opacity: 0.7 },
+    acceptButtonText: { color: COLORS.surface, fontSize: 18, fontWeight: 'bold' },
+    logoutButton: { marginTop: 20, padding: 10 },
+    logoutText: { color: COLORS.secondary, fontSize: 16, fontWeight: 'bold', textDecorationLine: 'underline' },
 });
 
 export default AcceptInviteScreen;

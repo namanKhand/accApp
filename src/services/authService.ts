@@ -22,10 +22,18 @@ const getFirebaseDb = () => getFirestore(getApp());
 
 async function buildProfile(firebaseUser: FirebaseAuthTypes.User): Promise<UserProfile> {
   try {
-    await getIdToken(firebaseUser); // ensure auth token is ready before Firestore calls
+    await getIdToken(firebaseUser);
     const snap = await getDoc(doc(getFirebaseDb(), 'users', firebaseUser.uid));
     if (snap.exists()) {
-      return snap.data() as UserProfile;
+      const data = snap.data() as Partial<UserProfile>;
+      return {
+        id: data.id ?? firebaseUser.uid,
+        email: data.email ?? firebaseUser.email ?? '',
+        displayName: data.displayName ?? firebaseUser.displayName ?? 'User',
+        photoURL: data.photoURL ?? firebaseUser.photoURL ?? undefined,
+        phoneNumber: data.phoneNumber,
+        partnerId: data.partnerId,
+      };
     }
   } catch (e) {
     console.error('buildProfile Firestore read failed:', e);

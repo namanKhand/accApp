@@ -22,7 +22,7 @@ export type RootStackParamList = {
   LoginSignup: undefined;
   CreateAccount: undefined;
   ForgotPassword: undefined;
-  ResetPassword: undefined;
+  ResetPassword: { oobCode?: string };
   GoalSetup: undefined;
   InviteFriend: undefined;
   ContactUs: undefined;
@@ -110,6 +110,16 @@ export const RootNavigator = () => {
                 name="Main"
                 component={MainTabs}
                 options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="GoalSetup"
+                component={GoalSetupScreen}
+                options={{ title: 'Edit Goal' }}
+              />
+              <Stack.Screen
+                name="InviteFriend"
+                component={InviteFriendScreen}
+                options={{ title: 'Invite Partner' }}
               />
               <Stack.Screen
                 name="ContactUs"

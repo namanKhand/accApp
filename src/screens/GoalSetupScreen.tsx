@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboard, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../constants/colors';
@@ -16,53 +15,68 @@ const GoalSetupScreen = () => {
     const navigation = useNavigation<NavigationProp>();
     const { addGoal, user } = useApp();
     const [step, setStep] = useState(0);
+    const [saving, setSaving] = useState(false);
 
-    // Goal State
     const [action, setAction] = useState('');
     const [frequency, setFrequency] = useState<string[]>([]);
     const [motivation, setMotivation] = useState('');
     const [deadline, setDeadline] = useState('');
 
     const handleNext = () => {
+        if (step === 1 && !action.trim()) {
+            Alert.alert('Missing action', 'Please describe what you want to do.');
+            return;
+        }
+        if (step === 2 && frequency.length === 0) {
+            Alert.alert('Missing frequency', 'Please select at least one day.');
+            return;
+        }
         if (step < 4) {
             setStep(step + 1);
         } else {
-            // Finish
             handleFinish();
         }
     };
 
     const handleFinish = async () => {
-        // Create goal object
         if (!user) return;
+        if (!action.trim()) {
+            Alert.alert('Missing action', 'Please describe what you want to do.');
+            return;
+        }
 
-        await addGoal({
-            id: Math.random().toString(), // Will be ignored by service
-            ownerId: user.id,
-            title: `I want to ${action}`,
-            description: motivation,
-            cadence: 'custom',
-            customSchedule: frequency.join(','),
-            startDate: new Date().toISOString(),
-            endDate: deadline,
-            streak: 0,
-            partnerId: '', // To be invited later
-            status: 'active'
-        });
-        navigation.replace('InviteFriend');
+        setSaving(true);
+        try {
+            await addGoal({
+                ownerId: user.id,
+                title: `I want to ${action.trim()}`,
+                description: motivation,
+                cadence: 'custom',
+                customSchedule: frequency.join(','),
+                startDate: new Date().toISOString(),
+                endDate: deadline || undefined,
+                streak: 0,
+                longestStreak: 0,
+                partnerId: '',
+                status: 'active',
+            });
+            navigation.replace('InviteFriend');
+        } catch (e) {
+            Alert.alert('Error', 'Failed to save goal. Please try again.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const toggleDay = (day: string) => {
-        if (frequency.includes(day)) {
-            setFrequency(frequency.filter(d => d !== day));
-        } else {
-            setFrequency([...frequency, day]);
-        }
+        setFrequency(prev =>
+            prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+        );
     };
 
     const renderStepContent = () => {
         switch (step) {
-            case 0: // Intro
+            case 0:
                 return (
                     <View style={styles.stepContainer}>
                         <Text style={styles.title}>Let's Get Started</Text>
@@ -77,7 +91,7 @@ const GoalSetupScreen = () => {
                         </TouchableOpacity>
                     </View>
                 );
-            case 1: // Action
+            case 1:
                 return (
                     <View style={styles.stepContainer}>
                         <View style={styles.headerRow}>
@@ -98,7 +112,7 @@ const GoalSetupScreen = () => {
                                 onChangeText={setAction}
                                 multiline
                                 returnKeyType="done"
-                                submitBehavior="blurAndSubmit"
+                                blurOnSubmit={true}
                                 onSubmitEditing={() => Keyboard.dismiss()}
                             />
                         </View>
@@ -107,7 +121,7 @@ const GoalSetupScreen = () => {
                         </TouchableOpacity>
                     </View>
                 );
-            case 2: // Frequency
+            case 2:
                 return (
                     <View style={styles.stepContainer}>
                         <View style={styles.headerRow}>
@@ -139,7 +153,7 @@ const GoalSetupScreen = () => {
                         </TouchableOpacity>
                     </View>
                 );
-            case 3: // Motivation
+            case 3:
                 return (
                     <View style={styles.stepContainer}>
                         <View style={styles.headerRow}>
@@ -160,7 +174,7 @@ const GoalSetupScreen = () => {
                                 onChangeText={setMotivation}
                                 multiline
                                 returnKeyType="done"
-                                submitBehavior="blurAndSubmit"
+                                blurOnSubmit={true}
                                 onSubmitEditing={() => Keyboard.dismiss()}
                             />
                         </View>
@@ -169,7 +183,7 @@ const GoalSetupScreen = () => {
                         </TouchableOpacity>
                     </View>
                 );
-            case 4: // Deadline
+            case 4:
                 return (
                     <View style={styles.stepContainer}>
                         <View style={styles.headerRow}>
@@ -236,8 +250,16 @@ const GoalSetupScreen = () => {
                             </Text>
                         </View>
 
-                        <TouchableOpacity style={styles.button} onPress={handleFinish}>
-                            <Text style={styles.buttonText}>Next {'>'}</Text>
+                        <TouchableOpacity
+                            style={[styles.button, saving && styles.disabledButton]}
+                            onPress={handleFinish}
+                            disabled={saving}
+                        >
+                            {saving ? (
+                                <ActivityIndicator color={COLORS.surface} />
+                            ) : (
+                                <Text style={styles.buttonText}>Next {'>'}</Text>
+                            )}
                         </TouchableOpacity>
                     </View>
                 );
@@ -248,9 +270,7 @@ const GoalSetupScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <LinearGradient colors={COLORS.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <View style={styles.progressBar}>
-                {/* Simple progress bar */}
                 <View style={[styles.progressFill, { width: `${(step / 4) * 100}%` }]} />
             </View>
             <ScrollView contentContainerStyle={styles.content}>
@@ -261,28 +281,11 @@ const GoalSetupScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.background,
-    },
-    progressBar: {
-        height: 5,
-        backgroundColor: 'rgba(196,181,168,0.4)',
-        width: '100%',
-    },
-    progressFill: {
-        height: '100%',
-        backgroundColor: COLORS.primary,
-    },
-    content: {
-        flexGrow: 1,
-        padding: 20,
-    },
-    stepContainer: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+    container: { flex: 1, backgroundColor: COLORS.background },
+    progressBar: { height: 5, backgroundColor: '#E0E0E0', width: '100%' },
+    progressFill: { height: '100%', backgroundColor: COLORS.primary },
+    content: { flexGrow: 1, padding: 20 },
+    stepContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     headerRow: {
         flexDirection: 'row',
         width: '100%',
@@ -290,166 +293,46 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 20,
     },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: COLORS.text,
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    stepTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: COLORS.text,
-    },
-    description: {
-        fontSize: 16,
-        color: COLORS.text,
-        textAlign: 'center',
-        marginBottom: 40,
-        lineHeight: 24,
-    },
-    label: {
-        fontSize: 16,
-        color: COLORS.text,
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    madLibContainer: {
-        width: '100%',
-        backgroundColor: COLORS.glassBg,
-        borderWidth: 1.5,
-        borderColor: COLORS.glassBorder,
-        padding: 20,
-        borderRadius: 20,
-        marginBottom: 28,
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
-        elevation: 4,
-    },
-    madLibText: {
-        fontSize: 16,
-        color: COLORS.text,
-        marginBottom: 10,
-        fontWeight: 'bold',
-        opacity: 0.75,
-    },
+    title: { fontSize: 24, fontWeight: 'bold', color: COLORS.text, marginBottom: 20, textAlign: 'center' },
+    stepTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text },
+    description: { fontSize: 16, color: COLORS.text, textAlign: 'center', marginBottom: 40, lineHeight: 24 },
+    label: { fontSize: 16, color: COLORS.text, marginBottom: 20, textAlign: 'center' },
+    madLibContainer: { width: '100%', backgroundColor: COLORS.surface, padding: 20, borderRadius: 15, marginBottom: 30 },
+    madLibText: { fontSize: 16, color: COLORS.text, marginBottom: 10, fontWeight: 'bold' },
     input: {
-        backgroundColor: COLORS.glassBgStrong,
-        borderRadius: 12,
+        backgroundColor: COLORS.surface,
+        borderRadius: 10,
         padding: 15,
         fontSize: 16,
         color: COLORS.text,
-        borderWidth: 1.5,
-        borderColor: COLORS.glassBorderStrong,
-        width: '100%',
-        marginBottom: 8,
-    },
-    button: {
-        backgroundColor: COLORS.primary,
-        paddingVertical: 13,
-        paddingHorizontal: 40,
-        borderRadius: 14,
-        marginTop: 20,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.38)',
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.35,
-        shadowRadius: 10,
-        elevation: 5,
-    },
-    buttonText: {
-        color: COLORS.surface,
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    skipButton: {
-        marginTop: 20,
-    },
-    skipButtonText: {
-        color: COLORS.text,
-        fontSize: 14,
-        textDecorationLine: 'underline',
-    },
-    daysContainer: {
+        borderColor: COLORS.secondary,
         width: '100%',
-        backgroundColor: COLORS.glassBg,
-        borderWidth: 1.5,
-        borderColor: COLORS.glassBorder,
-        padding: 20,
-        borderRadius: 20,
-        marginBottom: 28,
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
-        elevation: 4,
-    },
-    checkboxRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 10,
-    },
-    dayText: {
-        marginLeft: 10,
-        fontSize: 16,
-        color: COLORS.text,
-    },
-    calendarContainer: {
-        width: '100%',
-        borderRadius: 15,
-        overflow: 'hidden',
         marginBottom: 20,
     },
+    button: { backgroundColor: COLORS.primary, paddingVertical: 12, paddingHorizontal: 40, borderRadius: 8, marginTop: 20, minWidth: 120, alignItems: 'center' },
+    disabledButton: { opacity: 0.6 },
+    buttonText: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },
+    skipButton: { marginTop: 20 },
+    skipButtonText: { color: COLORS.text, fontSize: 14, textDecorationLine: 'underline' },
+    daysContainer: { width: '100%', backgroundColor: COLORS.surface, padding: 20, borderRadius: 15, marginBottom: 30 },
+    checkboxRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+    dayText: { marginLeft: 10, fontSize: 16, color: COLORS.text },
+    calendarContainer: { width: '100%', borderRadius: 15, overflow: 'hidden', marginBottom: 20 },
     skipCheckbox: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.glassBg,
-        borderWidth: 1.5,
-        borderColor: COLORS.glassBorder,
+        backgroundColor: COLORS.surface,
         padding: 15,
-        borderRadius: 14,
+        borderRadius: 10,
         width: '100%',
         marginBottom: 20,
     },
-    skipCheckboxText: {
-        marginLeft: 10,
-        color: COLORS.text,
-        fontSize: 16,
-    },
-    summaryCard: {
-        backgroundColor: COLORS.glassBg,
-        borderWidth: 1.5,
-        borderColor: COLORS.glassBorder,
-        padding: 22,
-        borderRadius: 20,
-        marginBottom: 20,
-        width: '100%',
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.14,
-        shadowRadius: 18,
-        elevation: 5,
-    },
-    summaryText: {
-        fontSize: 16,
-        color: COLORS.text,
-        lineHeight: 24,
-        textAlign: 'center',
-        marginBottom: 10,
-    },
-    summarySubtext: {
-        fontSize: 14,
-        color: COLORS.text,
-        textAlign: 'center',
-        marginTop: 10,
-    },
-    bold: {
-        fontWeight: 'bold',
-    },
+    skipCheckboxText: { marginLeft: 10, color: COLORS.text, fontSize: 16 },
+    summaryCard: { backgroundColor: COLORS.surface, padding: 20, borderRadius: 15, marginBottom: 20, width: '100%' },
+    summaryText: { fontSize: 16, color: COLORS.text, lineHeight: 24, textAlign: 'center', marginBottom: 10 },
+    summarySubtext: { fontSize: 14, color: COLORS.text, textAlign: 'center', marginTop: 10 },
+    bold: { fontWeight: 'bold' },
 });
 
 export default GoalSetupScreen;

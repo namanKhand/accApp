@@ -13,6 +13,7 @@ const NudgeScreen: React.FC = () => {
     await sendNudge({
       goalId: sharedGoal.id,
       senderId: user.id,
+      senderName: user.displayName,
       recipientId: sharedGoal.partnerId,
       message: 'Time to check in!'
     });
@@ -30,8 +31,12 @@ const NudgeScreen: React.FC = () => {
           <Card style={styles.card}>
             <Card.Title title={item.message} subtitle={new Date(item.createdAt).toLocaleString()} />
             <Card.Content>
-              <Text variant="bodySmall">To: {item.recipientId}</Text>
-              <Text variant="bodySmall">From: {item.senderId}</Text>
+              <Text variant="bodySmall">
+                To: {item.recipientId === user?.id ? 'You' : 'Partner'}
+              </Text>
+              <Text variant="bodySmall">
+                From: {item.senderId === user?.id ? 'You' : item.senderName ?? 'Partner'}
+              </Text>
             </Card.Content>
           </Card>
         )}
@@ -42,14 +47,8 @@ const NudgeScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    gap: 12
-  },
-  card: {
-    marginTop: 12
-  }
+  container: { flex: 1, padding: 16, gap: 12 },
+  card: { marginTop: 12 }
 });
 
 export default NudgeScreen;

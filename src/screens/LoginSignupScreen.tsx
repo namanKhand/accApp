@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
-    ScrollView, ActivityIndicator, Alert, Platform,
+    ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../constants/colors';
 import { RootStackParamList } from '../navigation/RootNavigator';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { authService } from '../services/authService';
 
@@ -20,23 +18,6 @@ const LoginSignupScreen = () => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const getSocialErrorMessage = (error: any, provider: 'Google' | 'Apple') => {
-        if (error?.code === 'auth/operation-not-allowed') {
-            return `${provider} sign-in is not enabled yet in Firebase Authentication.`;
-        }
-        if (error?.code === 'auth/account-exists-with-different-credential') {
-            return 'An account already exists with this email using a different sign-in method.';
-        }
-        if (error?.code === 'auth/cancelled-popup-request' || error?.code === 'auth/popup-closed-by-user') {
-            return `${provider} sign-in was cancelled.`;
-        }
-        if (error?.message === 'auth/apple-not-supported') {
-            return 'Apple sign-in is only available on iOS devices.';
-        }
-
-        return `${provider} sign-in failed. Please try again.`;
-    };
-
     const handleLogin = async () => {
         if (!email.trim() || !password) {
             Alert.alert('Missing fields', 'Please enter your email and password.');
@@ -45,8 +26,6 @@ const LoginSignupScreen = () => {
         setLoading(true);
         try {
             await authService.signIn(email.trim(), password);
-            // onAuthStateChanged in AppContext will fire automatically and
-            // the RootNavigator state machine will mount the correct screen.
         } catch (error: any) {
             const message =
                 error.code === 'auth/invalid-credential' ? 'Incorrect email or password. Please try again.' :
@@ -61,31 +40,8 @@ const LoginSignupScreen = () => {
         }
     };
 
-    const handleGoogleSignIn = async () => {
-        setLoading(true);
-        try {
-            await authService.signInWithGoogle();
-        } catch (error: any) {
-            Alert.alert('Google Sign-In Error', getSocialErrorMessage(error, 'Google'));
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleAppleSignIn = async () => {
-        setLoading(true);
-        try {
-            await authService.signInWithApple();
-        } catch (error: any) {
-            Alert.alert('Apple Sign-In Error', getSocialErrorMessage(error, 'Apple'));
-        } finally {
-            setLoading(false);
-        }
-    };
-
     return (
         <SafeAreaView style={styles.container}>
-            <LinearGradient colors={COLORS.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.card}>
                     <Text style={styles.headerTitle}>Log In or Sign Up</Text>
@@ -131,19 +87,6 @@ const LoginSignupScreen = () => {
                         )}
                     </TouchableOpacity>
 
-                    <Text style={styles.orText}>or sign in with</Text>
-
-                    <View style={styles.socialContainer}>
-                        <TouchableOpacity style={styles.socialButton} onPress={handleGoogleSignIn} disabled={loading}>
-                            <MaterialCommunityIcons name="google" size={24} color={COLORS.text} />
-                        </TouchableOpacity>
-                        {Platform.OS === 'ios' && (
-                            <TouchableOpacity style={styles.socialButton} onPress={handleAppleSignIn} disabled={loading}>
-                                <MaterialCommunityIcons name="apple" size={24} color={COLORS.text} />
-                            </TouchableOpacity>
-                        )}
-                    </View>
-
                     <View style={styles.footer}>
                         <Text style={styles.footerText}>Don't have an account?</Text>
                         <TouchableOpacity
@@ -162,91 +105,44 @@ const LoginSignupScreen = () => {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.background },
     scrollContent: { flexGrow: 1, padding: 20, justifyContent: 'center' },
-    card: {
-        backgroundColor: COLORS.glassBg,
-        borderWidth: 1.5,
-        borderColor: COLORS.glassBorder,
-        borderRadius: 32,
-        padding: 28,
-        alignItems: 'center',
-        width: '100%',
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 20 },
-        shadowOpacity: 0.18,
-        shadowRadius: 32,
-        elevation: 10,
-    },
-    headerTitle: { fontSize: 26, fontWeight: 'bold', color: COLORS.text, marginBottom: 28, letterSpacing: 0.3 },
+    card: { backgroundColor: COLORS.background, alignItems: 'center', width: '100%' },
+    headerTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.text, marginBottom: 30 },
     inputContainer: { width: '100%', marginBottom: 20 },
-    label: { fontSize: 15, color: COLORS.text, marginBottom: 8, fontWeight: '600' },
+    label: { fontSize: 16, color: COLORS.text, marginBottom: 8, fontWeight: '500' },
     input: {
-        backgroundColor: COLORS.glassBgStrong,
-        borderRadius: 14,
-        borderWidth: 1.5,
-        borderColor: COLORS.glassBorderStrong,
+        backgroundColor: COLORS.surface,
+        borderRadius: 10,
         padding: 15,
         fontSize: 16,
         color: COLORS.text,
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
         elevation: 2,
     },
-    forgotPassword: { color: COLORS.primaryDark, fontSize: 12, textAlign: 'right', marginTop: 8, fontWeight: '600' },
+    forgotPassword: { color: COLORS.text, fontSize: 12, textAlign: 'right', marginTop: 8 },
     loginButton: {
         backgroundColor: COLORS.primary,
-        paddingVertical: 14,
+        paddingVertical: 12,
         paddingHorizontal: 40,
-        borderRadius: 14,
+        borderRadius: 8,
         marginTop: 10,
         marginBottom: 20,
-        minWidth: 160,
+        minWidth: 140,
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.38)',
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.38,
-        shadowRadius: 10,
-        elevation: 5,
     },
     disabledButton: { opacity: 0.6 },
-    loginButtonText: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold', letterSpacing: 0.3 },
-    orText: { color: COLORS.text, marginBottom: 15, opacity: 0.6, fontSize: 13 },
-    socialContainer: { flexDirection: 'row', marginBottom: 36 },
-    socialButton: {
-        backgroundColor: COLORS.glassBgStrong,
-        width: 54,
-        height: 54,
-        borderRadius: 27,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginHorizontal: 10,
-        borderWidth: 1.5,
-        borderColor: COLORS.glassBorderStrong,
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.12,
-        shadowRadius: 6,
-        elevation: 3,
-    },
+    loginButtonText: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },
     footer: { alignItems: 'center' },
-    footerText: { color: COLORS.text, marginBottom: 12, opacity: 0.7 },
+    footerText: { color: COLORS.text, marginBottom: 10 },
     signUpButton: {
         backgroundColor: COLORS.primary,
-        paddingVertical: 11,
-        paddingHorizontal: 32,
-        borderRadius: 14,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.38)',
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.30,
-        shadowRadius: 8,
-        elevation: 4,
+        paddingVertical: 10,
+        paddingHorizontal: 30,
+        borderRadius: 8,
     },
-    signUpButtonText: { color: COLORS.surface, fontWeight: 'bold', letterSpacing: 0.2 },
+    signUpButtonText: { color: COLORS.surface, fontWeight: 'bold' },
 });
 
 export default LoginSignupScreen;

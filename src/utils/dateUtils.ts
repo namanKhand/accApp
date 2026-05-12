@@ -20,6 +20,7 @@ export const getCountdown = (endDate: string | undefined): string | null => {
         return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} left`;
     } else {
         const diffMinutes = Math.floor(diffMs / (1000 * 60));
+        if (diffMinutes <= 0) return 'Overdue';
         return `${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'} left`;
     }
 };

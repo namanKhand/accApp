@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
-    ScrollView, ActivityIndicator, Alert, Platform,
+    ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../constants/colors';
@@ -22,20 +21,6 @@ const CreateAccountScreen = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [agreed, setAgreed] = useState(false);
     const [loading, setLoading] = useState(false);
-
-    const getSocialErrorMessage = (error: any, provider: 'Google' | 'Apple') => {
-        if (error?.code === 'auth/operation-not-allowed') {
-            return `${provider} sign-up is not enabled yet in Firebase Authentication.`;
-        }
-        if (error?.code === 'auth/account-exists-with-different-credential') {
-            return 'An account already exists with this email using a different sign-in method.';
-        }
-        if (error?.message === 'auth/apple-not-supported') {
-            return 'Apple sign-in is only available on iOS devices.';
-        }
-
-        return `${provider} sign-up failed. Please try again.`;
-    };
 
     const handleSignUp = async () => {
         if (!fullName.trim() || !email.trim() || !password || !confirmPassword) {
@@ -58,7 +43,6 @@ const CreateAccountScreen = () => {
         setLoading(true);
         try {
             await authService.signUp(email.trim(), password, fullName.trim());
-            // onAuthStateChanged in AppContext fires automatically and RootNavigator mounts the correct authenticated screen.
         } catch (error: any) {
             const message =
                 error.code === 'auth/email-already-in-use' ? 'An account with this email already exists.' :
@@ -71,31 +55,8 @@ const CreateAccountScreen = () => {
         }
     };
 
-    const handleGoogleSignUp = async () => {
-        setLoading(true);
-        try {
-            await authService.signInWithGoogle();
-        } catch (error: any) {
-            Alert.alert('Google Sign-Up Error', getSocialErrorMessage(error, 'Google'));
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleAppleSignUp = async () => {
-        setLoading(true);
-        try {
-            await authService.signInWithApple();
-        } catch (error: any) {
-            Alert.alert('Apple Sign-Up Error', getSocialErrorMessage(error, 'Apple'));
-        } finally {
-            setLoading(false);
-        }
-    };
-
     return (
         <SafeAreaView style={styles.container}>
-            <LinearGradient colors={COLORS.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <MaterialCommunityIcons name="chevron-left" size={30} color={COLORS.text} />
@@ -177,19 +138,6 @@ const CreateAccountScreen = () => {
                             <Text style={styles.signUpButtonText}>Sign Up</Text>
                         )}
                     </TouchableOpacity>
-
-                    <Text style={styles.orText}>or sign up with</Text>
-
-                    <View style={styles.socialContainer}>
-                        <TouchableOpacity style={styles.socialButton} onPress={handleGoogleSignUp} disabled={loading}>
-                            <MaterialCommunityIcons name="google" size={24} color={COLORS.text} />
-                        </TouchableOpacity>
-                        {Platform.OS === 'ios' && (
-                            <TouchableOpacity style={styles.socialButton} onPress={handleAppleSignUp} disabled={loading}>
-                                <MaterialCommunityIcons name="apple" size={24} color={COLORS.text} />
-                            </TouchableOpacity>
-                        )}
-                    </View>
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -204,92 +152,42 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingVertical: 10,
-        marginHorizontal: 20,
-        marginTop: 8,
-        borderRadius: 22,
-        backgroundColor: COLORS.glassBg,
-        borderWidth: 1.5,
-        borderColor: COLORS.glassBorder,
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.10,
-        shadowRadius: 8,
-        elevation: 4,
     },
-    headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text, letterSpacing: 0.2 },
+    headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text },
     scrollContent: { padding: 20 },
-    form: {
-        alignItems: 'center',
-        backgroundColor: COLORS.glassBg,
-        borderWidth: 1.5,
-        borderColor: COLORS.glassBorder,
-        borderRadius: 32,
-        padding: 28,
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 20 },
-        shadowOpacity: 0.18,
-        shadowRadius: 32,
-        elevation: 10,
-    },
+    form: { alignItems: 'center' },
     inputContainer: { width: '100%', marginBottom: 20 },
-    label: { fontSize: 15, color: COLORS.text, marginBottom: 8, fontWeight: '600' },
+    label: { fontSize: 16, color: COLORS.text, marginBottom: 8, fontWeight: '500' },
     input: {
-        backgroundColor: COLORS.glassBgStrong,
-        borderRadius: 14,
-        borderWidth: 1.5,
-        borderColor: COLORS.glassBorderStrong,
+        backgroundColor: COLORS.surface,
+        borderRadius: 10,
         padding: 15,
         fontSize: 16,
         color: COLORS.text,
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
         elevation: 2,
     },
     checkboxContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 28,
+        marginBottom: 30,
         width: '100%',
     },
-    checkboxText: { marginLeft: 10, color: COLORS.text, fontSize: 14, flex: 1, opacity: 0.8 },
+    checkboxText: { marginLeft: 10, color: COLORS.text, fontSize: 14, flex: 1 },
     signUpButton: {
         backgroundColor: COLORS.primary,
-        paddingVertical: 14,
+        paddingVertical: 12,
         paddingHorizontal: 40,
-        borderRadius: 14,
+        borderRadius: 8,
         marginBottom: 20,
-        minWidth: 160,
+        minWidth: 140,
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.38)',
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.38,
-        shadowRadius: 10,
-        elevation: 5,
     },
     disabledButton: { opacity: 0.6 },
-    signUpButtonText: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold', letterSpacing: 0.3 },
-    orText: { color: COLORS.text, marginBottom: 15, opacity: 0.6, fontSize: 13 },
-    socialContainer: { flexDirection: 'row', marginBottom: 20 },
-    socialButton: {
-        backgroundColor: COLORS.glassBgStrong,
-        width: 54,
-        height: 54,
-        borderRadius: 27,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginHorizontal: 10,
-        borderWidth: 1.5,
-        borderColor: COLORS.glassBorderStrong,
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.12,
-        shadowRadius: 6,
-        elevation: 3,
-    },
+    signUpButtonText: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },
 });
 
 export default CreateAccountScreen;

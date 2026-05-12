@@ -19,7 +19,11 @@ const CheckInScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!user || goals.length === 0) return;
-    const goalId = goals[0].id;
+    const currentGoal = goals
+      .filter(g => g.ownerId === user.id && g.status === 'active')
+      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0]
+      ?? goals[goals.length - 1];
+    const goalId = currentGoal.id;
     await recordCheckIn({
       userId: user.id,
       goalId,

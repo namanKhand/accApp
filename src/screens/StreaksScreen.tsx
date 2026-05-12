@@ -7,16 +7,20 @@ import { useApp } from '../context/AppContext';
 const StreaksScreen: React.FC = () => {
   const { checkIns, user } = useApp();
 
-  const streakDays = useMemo(
-    () =>
-      checkIns
-        .filter((checkIn) => checkIn.userId === user?.id)
-        .map((checkIn) => ({
-          date: checkIn.date.split('T')[0],
-          completed: true
-        })),
-    [checkIns, user]
-  );
+  const streakDays = useMemo(() => {
+    const seen = new Set<string>();
+    const days: { date: string; completed: boolean }[] = [];
+    checkIns
+      .filter(ci => ci.userId === user?.id)
+      .forEach(ci => {
+        const date = ci.date.split('T')[0];
+        if (!seen.has(date)) {
+          seen.add(date);
+          days.push({ date, completed: true });
+        }
+      });
+    return days;
+  }, [checkIns, user]);
 
   return (
     <View style={styles.container}>
@@ -27,11 +31,7 @@ const StreaksScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    gap: 12
-  }
+  container: { flex: 1, padding: 16, gap: 12 }
 });
 
 export default StreaksScreen;

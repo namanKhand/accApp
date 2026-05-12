@@ -1,39 +1,35 @@
 import { CheckIn } from '../types';
 
-// Calculate current streak from check-ins
+function uniqueDateStrings(checkIns: CheckIn[]): string[] {
+    const seen = new Set<string>();
+    for (const ci of checkIns) {
+        seen.add(ci.date.split('T')[0]);
+    }
+    return Array.from(seen);
+}
+
 export const calculateCurrentStreak = (checkIns: CheckIn[]): number => {
     if (checkIns.length === 0) return 0;
 
-    // Sort check-ins by date (most recent first)
-    const sortedCheckIns = [...checkIns].sort((a, b) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
+    const dates = uniqueDateStrings(checkIns).sort((a, b) => b.localeCompare(a));
 
-    let streak = 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Check if there's a check-in today or yesterday
-    const mostRecentDate = new Date(sortedCheckIns[0].date);
-    mostRecentDate.setHours(0, 0, 0, 0);
+    const mostRecent = new Date(dates[0] + 'T00:00:00');
+    const daysDiff = Math.floor((today.getTime() - mostRecent.getTime()) / (1000 * 60 * 60 * 24));
 
-    const daysDiff = Math.floor((today.getTime() - mostRecentDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    // Streak is broken if last check-in was more than 1 day ago
     if (daysDiff > 1) return 0;
 
-    // Count consecutive days
-    let currentDate = new Date(mostRecentDate);
+    let streak = 0;
+    let current = new Date(mostRecent);
 
-    for (let i = 0; i < sortedCheckIns.length; i++) {
-        const checkInDate = new Date(sortedCheckIns[i].date);
-        checkInDate.setHours(0, 0, 0, 0);
-
-        if (checkInDate.getTime() === currentDate.getTime()) {
+    for (const dateStr of dates) {
+        const d = new Date(dateStr + 'T00:00:00');
+        if (d.getTime() === current.getTime()) {
             streak++;
-            currentDate.setDate(currentDate.getDate() - 1);
-        } else if (checkInDate.getTime() < currentDate.getTime()) {
-            // Gap in streak
+            current.setDate(current.getDate() - 1);
+        } else {
             break;
         }
     }
@@ -41,78 +37,51 @@ export const calculateCurrentStreak = (checkIns: CheckIn[]): number => {
     return streak;
 };
 
-// Calculate longest streak from check-ins
 export const calculateLongestStreak = (checkIns: CheckIn[]): number => {
     if (checkIns.length === 0) return 0;
 
-    // Sort check-ins by date
-    const sortedCheckIns = [...checkIns].sort((a, b) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
+    const dates = uniqueDateStrings(checkIns).sort((a, b) => a.localeCompare(b));
 
-    let longestStreak = 1;
-    let currentStreak = 1;
+    let longest = 1;
+    let current = 1;
 
-    for (let i = 1; i < sortedCheckIns.length; i++) {
-        const prevDate = new Date(sortedCheckIns[i - 1].date);
-        const currDate = new Date(sortedCheckIns[i].date);
+    for (let i = 1; i < dates.length; i++) {
+        const prev = new Date(dates[i - 1] + 'T00:00:00');
+        const curr = new Date(dates[i] + 'T00:00:00');
+        const diff = Math.floor((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
 
-        prevDate.setHours(0, 0, 0, 0);
-        currDate.setHours(0, 0, 0, 0);
-
-        const daysDiff = Math.floor((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
-
-        if (daysDiff === 1) {
-            // Consecutive day
-            currentStreak++;
-            longestStreak = Math.max(longestStreak, currentStreak);
-        } else if (daysDiff > 1) {
-            // Gap in streak
-            currentStreak = 1;
+        if (diff === 1) {
+            current++;
+            longest = Math.max(longest, current);
+        } else if (diff > 1) {
+            current = 1;
         }
-        // If daysDiff === 0, it's the same day, don't increment
     }
 
-    return longestStreak;
+    return longest;
 };
 
-// Get streak runs for calendar highlighting
 export const getStreakRuns = (checkIns: CheckIn[]): string[][] => {
     if (checkIns.length === 0) return [];
 
-    // Sort check-ins by date
-    const sortedCheckIns = [...checkIns].sort((a, b) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
+    const dates = uniqueDateStrings(checkIns).sort((a, b) => a.localeCompare(b));
 
     const runs: string[][] = [];
-    let currentRun: string[] = [sortedCheckIns[0].date.split('T')[0]];
+    let currentRun: string[] = [dates[0]];
 
-    for (let i = 1; i < sortedCheckIns.length; i++) {
-        const prevDate = new Date(sortedCheckIns[i - 1].date);
-        const currDate = new Date(sortedCheckIns[i].date);
+    for (let i = 1; i < dates.length; i++) {
+        const prev = new Date(dates[i - 1] + 'T00:00:00');
+        const curr = new Date(dates[i] + 'T00:00:00');
+        const diff = Math.floor((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
 
-        prevDate.setHours(0, 0, 0, 0);
-        currDate.setHours(0, 0, 0, 0);
-
-        const daysDiff = Math.floor((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
-
-        if (daysDiff === 1) {
-            // Consecutive day
-            currentRun.push(sortedCheckIns[i].date.split('T')[0]);
-        } else if (daysDiff > 1) {
-            // Gap - save current run and start new one
-            if (currentRun.length > 1) {
-                runs.push([...currentRun]);
-            }
-            currentRun = [sortedCheckIns[i].date.split('T')[0]];
+        if (diff === 1) {
+            currentRun.push(dates[i]);
+        } else {
+            runs.push([...currentRun]);
+            currentRun = [dates[i]];
         }
     }
-
-    // Add the last run if it has multiple days
-    if (currentRun.length > 1) {
-        runs.push(currentRun);
-    }
+    runs.push(currentRun);
 
     return runs;
 };

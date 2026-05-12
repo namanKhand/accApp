@@ -13,7 +13,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Onboarding'
 
 const { width } = Dimensions.get('window');
 
-// Real stats from user data
+// Illustrative example stats — not sourced from live user data
 const STATS = {
     goalsCompleted: '87%',
     avgStreakLength: '14 days',

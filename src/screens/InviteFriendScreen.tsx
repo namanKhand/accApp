@@ -21,7 +21,10 @@ const InviteFriendScreen = () => {
     const [friendEmail, setFriendEmail] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const currentGoal = goals[goals.length - 1]; // Assuming the last created goal is the current one
+    const currentGoal = goals
+        .filter(g => g.ownerId === user?.id && g.status === 'active')
+        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0]
+        ?? goals[0];
 
     const handleSend = async () => {
         if (!user || !currentGoal) return;
@@ -112,9 +115,9 @@ const InviteFriendScreen = () => {
                     </View>
 
                     <TouchableOpacity
-                        style={[styles.button, (!friendName.trim() || !friendEmail.trim()) && styles.disabledButton]}
+                        style={[styles.button, (!friendName.trim() || !friendEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(friendEmail.trim())) && styles.disabledButton]}
                         onPress={() => setStep(1)}
-                        disabled={!friendName.trim() || !friendEmail.trim()}
+                        disabled={!friendName.trim() || !friendEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(friendEmail.trim())}
                     >
                         <Text style={styles.buttonText}>Next {'>'}</Text>
                     </TouchableOpacity>

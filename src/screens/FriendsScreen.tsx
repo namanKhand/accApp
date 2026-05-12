@@ -27,7 +27,8 @@ const FriendsScreen = () => {
             .slice(0, 5); // Show last 5 check-ins
     }, [checkIns, partnerGoal, user]);
 
-    const hasPartner = partnerGoal && partnerCheckIns.length > 0;
+    const hasPartner = !!partnerGoal;
+    const hasPartnerActivity = partnerCheckIns.length > 0;
 
     if (!hasPartner) {
         const hasGoal = goals.length > 0;
@@ -81,6 +82,9 @@ const FriendsScreen = () => {
                 {/* Recent Check-Ins */}
                 <Text style={styles.sectionTitle}>Recent Activity</Text>
 
+                {!hasPartnerActivity && (
+                    <Text style={styles.description}>Your partner hasn't checked in yet. Check back soon!</Text>
+                )}
                 {partnerCheckIns.map((checkIn) => (
                     <LinearGradient key={checkIn.id} colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0.18)']} style={styles.checkInCard}>
                         <View style={styles.checkInHeader}>

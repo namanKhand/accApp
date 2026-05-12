@@ -18,7 +18,10 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const HomeScreen = () => {
     const { user, goals, checkIns, recordCheckIn } = useApp();
     const navigation = useNavigation<NavigationProp>();
-    const currentGoal = goals[goals.length - 1];
+    const currentGoal = goals
+        .filter(g => g.ownerId === user?.id && g.status === 'active')
+        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0]
+        ?? goals[goals.length - 1];
     const [checkInImage, setCheckInImage] = useState<string | null>(null);
     const [checkOutImage, setCheckOutImage] = useState<string | null>(null);
     const [checkInTime, setCheckInTime] = useState<string | null>(null);
@@ -166,9 +169,13 @@ const HomeScreen = () => {
                     Alert.alert('Warning', 'Photo captured but failed to save. Please try again.');
                 }
             }
-        } catch (error) {
-            console.error('Check-out error:', error);
-            Alert.alert('Error', 'An error occurred while checking out.');
+        } catch (error: any) {
+            if (error.message === 'permission_denied') {
+                Alert.alert('Permission Denied', 'Camera or photo library permission is required.');
+            } else {
+                console.error('Check-out error:', error);
+                Alert.alert('Error', 'An error occurred while checking out.');
+            }
         }
     };
 

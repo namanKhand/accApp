@@ -38,6 +38,7 @@ export interface CheckIn {
 export interface Nudge {
   id: string;
   senderId: string;
+  senderName?: string;
   recipientId: string;
   goalId: string;
   message: string;

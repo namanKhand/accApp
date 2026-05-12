@@ -14,7 +14,16 @@ const GoalCard: React.FC<Props> = ({ goal, onNudge }) => (
     <Card.Content>
       <Text variant="bodySmall">Cadence: {goal.cadence}</Text>
       <Text variant="bodySmall">Streak: {goal.streak} days</Text>
-      <ProgressBar progress={Math.min(goal.streak / 30, 1)} color="#C46B3B" style={styles.progress} />
+      <ProgressBar
+        progress={goal.endDate && goal.startDate
+          ? Math.min(goal.streak / Math.max(
+              Math.ceil((new Date(goal.endDate).getTime() - new Date(goal.startDate).getTime()) / (1000 * 60 * 60 * 24)),
+              1
+            ), 1)
+          : Math.min(goal.streak / 30, 1)}
+        color="#C46B3B"
+        style={styles.progress}
+      />
     </Card.Content>
     {onNudge && (
       <Card.Actions>

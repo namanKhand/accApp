@@ -3,7 +3,7 @@ import firestore, {
   collection,
   addDoc,
   getDocs,
-  setDoc,
+  getDoc,
   updateDoc,
   doc,
   query,
@@ -14,6 +14,8 @@ import { Goal } from '../types';
 
 const db = () => firestore(getApp());
 const GOALS = 'goals';
+
+type SafeGoalUpdates = Partial<Pick<Goal, 'partnerId' | 'status' | 'streak' | 'longestStreak' | 'endDate'>>;
 
 class GoalService {
   async getGoals(userId: string): Promise<Goal[]> {
@@ -31,6 +33,7 @@ class GoalService {
           goals.push({ ...(snap.data() as Goal), id: snap.id });
         }
       }
+      goals.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
       return goals;
     } catch (e) {
       console.error('Error fetching goals', e);
@@ -38,26 +41,30 @@ class GoalService {
     }
   }
 
-  async createGoal(goal: Goal): Promise<void> {
+  async getGoalById(goalId: string): Promise<Goal | null> {
     try {
-      const { id, ...goalData } = goal;
-      const data = { ...goalData, createdAt: serverTimestamp() };
-      if (id) {
-        await setDoc(doc(db(), GOALS, id), data);
-      } else {
-        await addDoc(collection(db(), GOALS), data);
+      const snap = await getDoc(doc(db(), GOALS, goalId));
+      if (snap.exists()) {
+        return { ...(snap.data() as Goal), id: snap.id };
       }
+      return null;
     } catch (e) {
-      console.error('Error creating goal', e);
+      console.error('Error fetching goal by ID', e);
+      return null;
     }
   }
 
-  async updateGoal(goalId: string, updates: Partial<Goal>): Promise<void> {
-    try {
-      await updateDoc(doc(db(), GOALS, goalId), updates as Record<string, unknown>);
-    } catch (e) {
-      console.error('Error updating goal', e);
-    }
+  async createGoal(goal: Omit<Goal, 'id'>): Promise<string> {
+    const { ...goalData } = goal;
+    const ref = await addDoc(collection(db(), GOALS), {
+      ...goalData,
+      createdAt: serverTimestamp(),
+    });
+    return ref.id;
+  }
+
+  async updateGoal(goalId: string, updates: SafeGoalUpdates): Promise<void> {
+    await updateDoc(doc(db(), GOALS, goalId), updates as Record<string, unknown>);
   }
 }
 
