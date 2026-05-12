@@ -2,11 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Linking, ScrollView } from 'react-native';
 import { COLORS } from '../constants/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 
 const ContactUsScreen = () => {
-    const navigation = useNavigation();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
@@ -36,15 +33,7 @@ const ContactUsScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <MaterialCommunityIcons name="chevron-left" size={30} color={COLORS.text} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Contact Us</Text>
-                <View style={{ width: 30 }} />
-            </View>
-
+        <SafeAreaView style={styles.container} edges={['bottom']}>
             <ScrollView contentContainerStyle={styles.content}>
                 <Text style={styles.description}>
                     Have questions or feedback? Send us a message and we'll get back to you as soon as possible.
@@ -100,23 +89,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.background,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(0,0,0,0.05)',
-    },
-    backButton: {
-        padding: 5,
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: COLORS.text,
     },
     content: {
         padding: 20,

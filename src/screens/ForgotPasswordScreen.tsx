@@ -69,7 +69,7 @@ const ForgotPasswordScreen = () => {
                             <Text style={styles.bold}>{email}</Text>
                             {'\n\n'}Check spam if you don't see it. Then copy the link and tap below to set your new password.
                         </Text>
-                        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('ResetPassword')}>
+                        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('ResetPassword', {})}>
                             <Text style={styles.buttonText}>Enter Reset Link</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('LoginSignup')}>

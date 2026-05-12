@@ -5,7 +5,10 @@ import emailjs from '@emailjs/react-native';
 import { COLORS } from '../constants/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useApp } from '../context/AppContext';
+import { RootStackParamList } from '../navigation/RootNavigator';
 
 // ── EmailJS config ──────────────────────────────────────────────────────────
 // Sign up at emailjs.com → add a Gmail service → create a template → paste IDs below
@@ -16,6 +19,7 @@ const EMAILJS_PUBLIC_KEY  = 'IVGtOgXEO_-HeKb7C';
 
 const InviteFriendScreen = () => {
     const { user, goals, sendInvite } = useApp();
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const [step, setStep] = useState(0);
     const [friendName, setFriendName] = useState('');
     const [friendEmail, setFriendEmail] = useState('');
@@ -62,8 +66,8 @@ const InviteFriendScreen = () => {
                 );
             });
 
-            // RootNavigator detects sentInvites.length > 0 and switches to WaitingForPartner.
-            // setLoading(false) intentionally omitted — component unmounts on navigation.
+            // Navigate to confirmation screen explicitly
+            navigation.replace('WaitingForPartner');
         } catch (error: any) {
             console.error('[sendInvite] failed:', error?.code, error?.message);
             Alert.alert('Error', `Could not save your invite: ${error?.message || 'unknown error'}. Please try again.`);

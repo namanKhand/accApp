@@ -15,7 +15,7 @@ import { Goal } from '../types';
 const db = () => firestore(getApp());
 const GOALS = 'goals';
 
-type SafeGoalUpdates = Partial<Pick<Goal, 'partnerId' | 'status' | 'streak' | 'longestStreak' | 'endDate'>>;
+type SafeGoalUpdates = Partial<Pick<Goal, 'partnerId' | 'status' | 'streak' | 'longestStreak' | 'endDate' | 'title' | 'description' | 'customSchedule'>>;
 
 class GoalService {
   async getGoals(userId: string): Promise<Goal[]> {

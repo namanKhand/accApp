@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Switch } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../constants/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
+import { useTheme } from '../context/ThemeContext';
 import { authService } from '../services/authService';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,6 +15,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const SettingsScreen = () => {
     const { user } = useApp();
+    const { isDark, toggleTheme, colors } = useTheme();
     const navigation = useNavigation<NavigationProp>();
 
     const handleLogout = () => {
@@ -50,8 +52,8 @@ const SettingsScreen = () => {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
-            <LinearGradient colors={COLORS.backgroundGradient} style={StyleSheet.absoluteFillObject} />
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+            <LinearGradient colors={colors.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Settings</Text>
             </View>
@@ -78,12 +80,20 @@ const SettingsScreen = () => {
                         title="Notifications"
                         onPress={() => Alert.alert('Coming Soon', 'Notification settings will be available soon!')}
                     />
-                    <SettingItem
-                        icon="theme-light-dark"
-                        title="Appearance"
-                        value="Light"
-                        onPress={() => Alert.alert('Coming Soon', 'Dark mode is coming soon!')}
-                    />
+                    <TouchableOpacity style={styles.settingItem} onPress={toggleTheme}>
+                        <View style={styles.settingLeft}>
+                            <View style={styles.iconContainer}>
+                                <MaterialCommunityIcons name="theme-light-dark" size={24} color={COLORS.primary} />
+                            </View>
+                            <Text style={styles.settingTitle}>Dark Mode</Text>
+                        </View>
+                        <Switch
+                            value={isDark}
+                            onValueChange={toggleTheme}
+                            trackColor={{ false: COLORS.secondary, true: COLORS.primary }}
+                            thumbColor={COLORS.surface}
+                        />
+                    </TouchableOpacity>
                 </View>
 
                 <Text style={styles.sectionHeader}>Support</Text>

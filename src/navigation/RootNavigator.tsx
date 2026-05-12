@@ -122,6 +122,11 @@ export const RootNavigator = () => {
                 options={{ title: 'Invite Partner' }}
               />
               <Stack.Screen
+                name="WaitingForPartner"
+                component={WaitingForPartnerScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
                 name="ContactUs"
                 component={ContactUsScreen}
                 options={{ title: 'Contact Us' }}

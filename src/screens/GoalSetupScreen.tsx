@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboard, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,14 +13,32 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'GoalSetup'>
 
 const GoalSetupScreen = () => {
     const navigation = useNavigation<NavigationProp>();
-    const { addGoal, user } = useApp();
-    const [step, setStep] = useState(0);
+    const { addGoal, updateGoal, user, goals } = useApp();
+
+    const existingGoal = useMemo(() =>
+        goals.filter(g => g.ownerId === user?.id && g.status === 'active')
+             .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0] ?? null,
+        [goals, user]
+    );
+
+    const isEditing = !!existingGoal;
+
+    const [step, setStep] = useState(isEditing ? 1 : 0);
     const [saving, setSaving] = useState(false);
 
-    const [action, setAction] = useState('');
-    const [frequency, setFrequency] = useState<string[]>([]);
-    const [motivation, setMotivation] = useState('');
-    const [deadline, setDeadline] = useState('');
+    const [action, setAction] = useState(() => {
+        if (existingGoal?.title) {
+            return existingGoal.title.replace(/^I want to /i, '');
+        }
+        return '';
+    });
+    const [frequency, setFrequency] = useState<string[]>(() =>
+        existingGoal?.customSchedule ? existingGoal.customSchedule.split(',') : []
+    );
+    const [motivation, setMotivation] = useState(existingGoal?.description ?? '');
+    const [deadline, setDeadline] = useState(
+        existingGoal?.endDate ? existingGoal.endDate.split('T')[0] : ''
+    );
 
     const handleNext = () => {
         if (step === 1 && !action.trim()) {
@@ -47,20 +65,30 @@ const GoalSetupScreen = () => {
 
         setSaving(true);
         try {
-            await addGoal({
-                ownerId: user.id,
-                title: `I want to ${action.trim()}`,
-                description: motivation,
-                cadence: 'custom',
-                customSchedule: frequency.join(','),
-                startDate: new Date().toISOString(),
-                endDate: deadline || undefined,
-                streak: 0,
-                longestStreak: 0,
-                partnerId: '',
-                status: 'active',
-            });
-            navigation.replace('InviteFriend');
+            if (isEditing && existingGoal) {
+                await updateGoal(existingGoal.id, {
+                    title: `I want to ${action.trim()}`,
+                    description: motivation,
+                    customSchedule: frequency.join(','),
+                    endDate: deadline || undefined,
+                });
+                navigation.goBack();
+            } else {
+                await addGoal({
+                    ownerId: user.id,
+                    title: `I want to ${action.trim()}`,
+                    description: motivation,
+                    cadence: 'custom',
+                    customSchedule: frequency.join(','),
+                    startDate: new Date().toISOString(),
+                    endDate: deadline || undefined,
+                    streak: 0,
+                    longestStreak: 0,
+                    partnerId: '',
+                    status: 'active',
+                });
+                navigation.replace('InviteFriend');
+            }
         } catch (e) {
             Alert.alert('Error', 'Failed to save goal. Please try again.');
         } finally {
@@ -185,7 +213,7 @@ const GoalSetupScreen = () => {
                 );
             case 4:
                 return (
-                    <View style={styles.stepContainer}>
+                    <View style={[styles.stepContainer, { justifyContent: 'flex-start', flex: 0, width: '100%' }]}>
                         <View style={styles.headerRow}>
                             <TouchableOpacity onPress={() => setStep(step - 1)}>
                                 <MaterialCommunityIcons name="chevron-left" size={30} color={COLORS.text} />

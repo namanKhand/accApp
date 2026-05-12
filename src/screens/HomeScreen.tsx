@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS } from '../constants/colors';
+import { useTheme } from '../context/ThemeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
@@ -17,6 +18,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeScreen = () => {
     const { user, goals, checkIns, recordCheckIn } = useApp();
+    const { colors } = useTheme();
     const navigation = useNavigation<NavigationProp>();
     const currentGoal = goals
         .filter(g => g.ownerId === user?.id && g.status === 'active')
@@ -180,8 +182,9 @@ const HomeScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+            <LinearGradient colors={colors.backgroundGradient} style={StyleSheet.absoluteFillObject} />
+            <View style={[styles.header, { backgroundColor: colors.glassBg, borderColor: colors.glassBorder }]}>
                 <Text style={styles.logoText}>2gether</Text>
                 <Text style={styles.headerTitle}>ME</Text>
             </View>

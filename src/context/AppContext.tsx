@@ -13,6 +13,7 @@ const db = () => firestore(getApp());
 
 interface AppContextValue {
   user: UserProfile | null;
+  partnerProfile: UserProfile | null;
   loading: boolean;
   goals: Goal[];
   checkIns: CheckIn[];
@@ -21,6 +22,7 @@ interface AppContextValue {
   receivedInvites: PartnerInvite[];
   refreshData: () => Promise<void>;
   addGoal: (goal: Omit<Goal, 'id'>) => Promise<void>;
+  updateGoal: (goalId: string, updates: Partial<Pick<Goal, 'title' | 'description' | 'customSchedule' | 'endDate'>>) => Promise<void>;
   recordCheckIn: (checkIn: Omit<CheckIn, 'id'>) => Promise<void>;
   sendNudge: (nudge: Omit<Nudge, 'id' | 'createdAt'>) => Promise<void>;
   sendInvite: (invite: Omit<PartnerInvite, 'id' | 'status' | 'createdAt'>) => Promise<void>;
@@ -31,6 +33,7 @@ const AppContext = createContext<AppContextValue | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [partnerProfile, setPartnerProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
@@ -54,6 +57,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setNudges(nudgeData);
     setSentInvites(sent);
     setReceivedInvites(received);
+
+    // Derive partner ID: from user.partnerId OR from goals where user is the partner
+    const partnerIdFromGoal = goalData.find(g => g.ownerId !== profile.id && g.partnerId === profile.id)?.ownerId
+      ?? goalData.find(g => g.ownerId === profile.id && g.partnerId)?.partnerId;
+    const partnerId = profile.partnerId || partnerIdFromGoal;
+
+    if (partnerId) {
+      try {
+        const { getDoc: _getDoc, doc: _doc } = await import('@react-native-firebase/firestore');
+        const snap = await _getDoc(_doc(db(), 'users', partnerId));
+        if (snap.exists()) {
+          setPartnerProfile({ ...(snap.data() as UserProfile), id: snap.id });
+        } else {
+          setPartnerProfile(null);
+        }
+      } catch { /* non-critical */ }
+    } else {
+      setPartnerProfile(null);
+    }
   }, []);
 
   const refreshData = useCallback(async () => {
@@ -71,6 +93,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setGoals(prev => [...prev, { ...goal, id }]);
     refreshData().catch(e => console.error('refreshData after addGoal:', e));
   }, [refreshData]);
+
+  const updateGoal = useCallback(async (goalId: string, updates: Partial<Pick<Goal, 'title' | 'description' | 'customSchedule' | 'endDate'>>) => {
+    await goalService.updateGoal(goalId, updates);
+    setGoals(prev => prev.map(g => g.id === goalId ? { ...g, ...updates } : g));
+  }, []);
 
   const recordCheckIn = useCallback(async (checkIn: Omit<CheckIn, 'id'>) => {
     await checkInService.createCheckIn(checkIn);
@@ -166,28 +193,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           });
 
-          // Poll every 5 s for invite updates while the user is logged in
+          // Poll every 10 s for invite + check-in updates while the user is logged in
           interval = setInterval(async () => {
             if (!active) return;
             try {
-              const [sent, received] = await Promise.all([
+              const [sent, received, goalData] = await Promise.all([
                 inviteService.getSentInvites(profile.id),
                 inviteService.getReceivedInvites(profile.email),
+                goalService.getGoals(profile.id),
               ]);
+              const allCheckIns = await Promise.all(
+                goalData.map(g => checkInService.getCheckInsForGoal(g.id))
+              );
               if (active) {
                 setSentInvites(sent);
                 setReceivedInvites(received);
+                setGoals(goalData);
+                setCheckIns(allCheckIns.flat());
               }
             } catch {
               // Ignore transient polling errors
             }
-          }, 5000);
+          }, 10000);
         } finally {
           if (active) setLoading(false);
         }
       } else {
         if (active) {
           setUser(null);
+          setPartnerProfile(null);
           setGoals([]);
           setCheckIns([]);
           setNudges([]);
@@ -207,11 +241,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const value = useMemo(
     () => ({
-      user, loading, goals, checkIns, nudges, sentInvites, receivedInvites,
-      refreshData, addGoal, recordCheckIn, sendNudge, sendInvite, acceptInvite,
+      user, partnerProfile, loading, goals, checkIns, nudges, sentInvites, receivedInvites,
+      refreshData, addGoal, updateGoal, recordCheckIn, sendNudge, sendInvite, acceptInvite,
     }),
-    [user, loading, goals, checkIns, nudges, sentInvites, receivedInvites,
-      refreshData, addGoal, recordCheckIn, sendNudge, sendInvite, acceptInvite]
+    [user, partnerProfile, loading, goals, checkIns, nudges, sentInvites, receivedInvites,
+      refreshData, addGoal, updateGoal, recordCheckIn, sendNudge, sendInvite, acceptInvite]
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

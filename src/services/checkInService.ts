@@ -33,14 +33,23 @@ class CheckInService {
     }
   }
 
+  private async tryUploadPhoto(localUri: string, userId: string): Promise<string | null> {
+    try {
+      return await this.uploadPhoto(localUri, userId);
+    } catch (e) {
+      console.warn('[CheckIn] Photo upload failed, saving without photo:', e);
+      return null;
+    }
+  }
+
   async createCheckIn(checkIn: Omit<CheckIn, 'id'>): Promise<void> {
     try {
       let { photoUri, checkOutPhotoUri, ...rest } = checkIn;
       if (photoUri && !photoUri.startsWith('https://')) {
-        photoUri = await this.uploadPhoto(photoUri, checkIn.userId);
+        photoUri = await this.tryUploadPhoto(photoUri, checkIn.userId) ?? undefined;
       }
       if (checkOutPhotoUri && !checkOutPhotoUri.startsWith('https://')) {
-        checkOutPhotoUri = await this.uploadPhoto(checkOutPhotoUri, checkIn.userId);
+        checkOutPhotoUri = await this.tryUploadPhoto(checkOutPhotoUri, checkIn.userId) ?? undefined;
       }
       await addDoc(collection(db(), CHECKINS), {
         ...rest,
