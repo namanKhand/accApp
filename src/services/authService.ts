@@ -11,6 +11,8 @@ import auth, {
 } from '@react-native-firebase/auth';
 import firestore, { getFirestore, collection, doc, getDoc, setDoc } from '@react-native-firebase/firestore';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
 import { UserProfile } from '../types';
 
@@ -98,12 +100,56 @@ class AuthService {
     if (Platform.OS !== 'ios') {
       throw new Error('auth/apple-not-supported');
     }
+    if (!(await AppleAuthentication.isAvailableAsync())) {
+      throw new Error('auth/apple-not-available');
+    }
 
-    const provider = new auth.OAuthProvider('apple.com');
-    provider.addScope('email');
-    provider.addScope('name');
+    // Generate a nonce so Firebase can verify the Apple-issued identity token
+    const rawNonce = Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
+    const hashedNonce = await Crypto.digestStringAsync(
+      Crypto.CryptoDigestAlgorithm.SHA256,
+      rawNonce,
+    );
 
-    const credential = await getFirebaseAuth().signInWithProvider(provider);
+    const appleCredential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+      nonce: hashedNonce,
+    });
+
+    if (!appleCredential.identityToken) {
+      throw new Error('Apple Sign-In failed: no identity token returned.');
+    }
+
+    const firebaseCredential = auth.AppleAuthProvider.credential(
+      appleCredential.identityToken,
+      rawNonce,
+    );
+    const credential = await getFirebaseAuth().signInWithCredential(firebaseCredential);
+
+    // Apple only returns fullName / email on the FIRST sign-in. Persist what we get.
+    const displayName = appleCredential.fullName
+      ? [appleCredential.fullName.givenName, appleCredential.fullName.familyName]
+          .filter(Boolean).join(' ').trim()
+      : null;
+    const email = appleCredential.email ?? credential.user.email ?? '';
+
+    try {
+      await setDoc(doc(getFirebaseDb(), 'users', credential.user.uid), {
+        id: credential.user.uid,
+        email,
+        displayName: displayName || credential.user.displayName || 'User',
+      }, { merge: true });
+
+      if (displayName && !credential.user.displayName) {
+        await updateProfile(credential.user, { displayName });
+      }
+    } catch (e) {
+      console.error('Firestore profile upsert failed after Apple sign-in:', e);
+    }
+
     return buildProfile(credential.user);
   }
 

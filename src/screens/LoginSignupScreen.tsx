@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
-    ScrollView, ActivityIndicator, Alert,
+    ScrollView, ActivityIndicator, Alert, Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { authService } from '../services/authService';
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'LoginSignup'>;
 
@@ -20,6 +21,29 @@ const LoginSignupScreen = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [appleAvailable, setAppleAvailable] = useState(false);
+
+    useEffect(() => {
+        if (Platform.OS === 'ios') {
+            AppleAuthentication.isAvailableAsync().then(setAppleAvailable).catch(() => {});
+        }
+    }, []);
+
+    const handleAppleSignIn = async () => {
+        setLoading(true);
+        try {
+            await authService.signInWithApple();
+        } catch (error: any) {
+            if (error?.code === 'ERR_REQUEST_CANCELED') return; // user cancelled — silent
+            const message =
+                error?.message === 'auth/apple-not-available'
+                    ? 'Sign in with Apple is not available on this device.'
+                    : error?.message ?? 'Apple Sign-In failed. Please try again.';
+            Alert.alert('Sign-In Error', message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleLogin = async () => {
         if (!email.trim() || !password) {
@@ -91,6 +115,28 @@ const LoginSignupScreen = () => {
                         )}
                     </TouchableOpacity>
 
+                    {appleAvailable ? (
+                        <View style={styles.dividerRow}>
+                            <View style={styles.dividerLine} />
+                            <Text style={styles.dividerText}>or</Text>
+                            <View style={styles.dividerLine} />
+                        </View>
+                    ) : null}
+
+                    {appleAvailable ? (
+                        <AppleAuthentication.AppleAuthenticationButton
+                            buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                            buttonStyle={
+                                colors.background === '#FDF3E0'
+                                    ? AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+                                    : AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                            }
+                            cornerRadius={8}
+                            style={styles.appleButton}
+                            onPress={handleAppleSignIn}
+                        />
+                    ) : null}
+
                     <View style={styles.footer}>
                         <Text style={styles.footerText}>Don't have an account?</Text>
                         <TouchableOpacity
@@ -139,6 +185,19 @@ const makeStyles = (colors: ReturnType<typeof import('../context/ThemeContext').
     },
     disabledButton: { opacity: 0.6 },
     loginButtonText: { color: colors.surface, fontSize: 16, fontWeight: 'bold' },
+    dividerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        marginVertical: 8,
+    },
+    dividerLine: { flex: 1, height: 1, backgroundColor: colors.glassBorder },
+    dividerText: { marginHorizontal: 12, color: colors.secondary, fontSize: 13 },
+    appleButton: {
+        width: '100%',
+        height: 48,
+        marginBottom: 20,
+    },
     footer: { alignItems: 'center' },
     footerText: { color: colors.text, marginBottom: 10 },
     signUpButton: {
