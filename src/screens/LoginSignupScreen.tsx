@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
     ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../constants/colors';
+import { useTheme } from '../context/ThemeContext';
+import { LinearGradient } from 'expo-linear-gradient';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { authService } from '../services/authService';
@@ -14,6 +15,8 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'LoginSignup
 
 const LoginSignupScreen = () => {
     const navigation = useNavigation<NavigationProp>();
+    const { colors } = useTheme();
+    const styles = useMemo(() => makeStyles(colors), [colors]);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -42,6 +45,7 @@ const LoginSignupScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <LinearGradient colors={colors.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.card}>
                     <Text style={styles.headerTitle}>Log In or Sign Up</Text>
@@ -51,7 +55,7 @@ const LoginSignupScreen = () => {
                         <TextInput
                             style={styles.input}
                             placeholder="example@example.com"
-                            placeholderTextColor={COLORS.secondary}
+                            placeholderTextColor={colors.secondary}
                             value={email}
                             onChangeText={setEmail}
                             autoCapitalize="none"
@@ -65,7 +69,7 @@ const LoginSignupScreen = () => {
                         <TextInput
                             style={styles.input}
                             placeholder="**********"
-                            placeholderTextColor={COLORS.secondary}
+                            placeholderTextColor={colors.secondary}
                             value={password}
                             onChangeText={setPassword}
                             secureTextEntry
@@ -81,7 +85,7 @@ const LoginSignupScreen = () => {
                         disabled={loading}
                     >
                         {loading ? (
-                            <ActivityIndicator color={COLORS.surface} />
+                            <ActivityIndicator color={colors.surface} />
                         ) : (
                             <Text style={styles.loginButtonText}>Log In</Text>
                         )}
@@ -102,28 +106,29 @@ const LoginSignupScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.background },
+const makeStyles = (colors: ReturnType<typeof import('../context/ThemeContext').useTheme>['colors']) =>
+    StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
     scrollContent: { flexGrow: 1, padding: 20, justifyContent: 'center' },
-    card: { backgroundColor: COLORS.background, alignItems: 'center', width: '100%' },
-    headerTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.text, marginBottom: 30 },
+    card: { backgroundColor: colors.background, alignItems: 'center', width: '100%' },
+    headerTitle: { fontSize: 24, fontWeight: 'bold', color: colors.text, marginBottom: 30 },
     inputContainer: { width: '100%', marginBottom: 20 },
-    label: { fontSize: 16, color: COLORS.text, marginBottom: 8, fontWeight: '500' },
+    label: { fontSize: 16, color: colors.text, marginBottom: 8, fontWeight: '500' },
     input: {
-        backgroundColor: COLORS.surface,
+        backgroundColor: colors.surface,
         borderRadius: 10,
         padding: 15,
         fontSize: 16,
-        color: COLORS.text,
+        color: colors.text,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 2,
     },
-    forgotPassword: { color: COLORS.text, fontSize: 12, textAlign: 'right', marginTop: 8 },
+    forgotPassword: { color: colors.text, fontSize: 12, textAlign: 'right', marginTop: 8 },
     loginButton: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         paddingVertical: 12,
         paddingHorizontal: 40,
         borderRadius: 8,
@@ -133,16 +138,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     disabledButton: { opacity: 0.6 },
-    loginButtonText: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },
+    loginButtonText: { color: colors.surface, fontSize: 16, fontWeight: 'bold' },
     footer: { alignItems: 'center' },
-    footerText: { color: COLORS.text, marginBottom: 10 },
+    footerText: { color: colors.text, marginBottom: 10 },
     signUpButton: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         paddingVertical: 10,
         paddingHorizontal: 30,
         borderRadius: 8,
     },
-    signUpButtonText: { color: COLORS.surface, fontWeight: 'bold' },
+    signUpButtonText: { color: colors.surface, fontWeight: 'bold' },
 });
 
 export default LoginSignupScreen;

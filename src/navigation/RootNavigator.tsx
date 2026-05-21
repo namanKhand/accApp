@@ -2,7 +2,7 @@ import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useApp } from '../context/AppContext';
-import { COLORS } from '../constants/colors';
+import { useTheme } from '../context/ThemeContext';
 import LaunchScreen from '../screens/LaunchScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import LoginSignupScreen from '../screens/LoginSignupScreen';
@@ -35,18 +35,15 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootNavigator = () => {
   const { user, loading, goals, sentInvites, receivedInvites } = useApp();
+  const { colors } = useTheme();
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
-
-  // --- State Machine Logic ---
-  // Default to unauthenticated flow
-  let initialRoute: keyof RootStackParamList = 'Launch';
 
   const hasActiveSharedGoal = goals.some(g => g.partnerId && g.partnerId !== '');
   const isWaitingForPartner = sentInvites.length > 0;
@@ -56,14 +53,11 @@ export const RootNavigator = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: true,
-        headerStyle: {
-          backgroundColor: COLORS.background,
-        },
-        headerTintColor: COLORS.text,
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.text,
+        headerTitleStyle: { fontWeight: 'bold', color: colors.text },
         headerShadowVisible: false,
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
       {!user ? (

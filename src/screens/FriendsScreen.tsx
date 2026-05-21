@@ -80,7 +80,7 @@ const FriendsScreen = () => {
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {/* Partner Info Card */}
-                <LinearGradient colors={['rgba(255,255,255,0.54)', 'rgba(255,255,255,0.22)']} style={styles.card}>
+                <LinearGradient colors={[colors.glassBgStrong, colors.glassBg]} style={styles.card}>
                     <View style={styles.partnerRow}>
                         <View style={styles.partnerAvatar}>
                             <MaterialCommunityIcons name="account-circle" size={40} color={colors.primary} />
@@ -113,7 +113,7 @@ const FriendsScreen = () => {
                 {partnerCheckIns.map((checkIn) => (
                     <LinearGradient
                         key={checkIn.id}
-                        colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0.18)']}
+                        colors={[colors.glassBgStrong, colors.glassBg]}
                         style={styles.checkInCard}
                     >
                         <View style={styles.checkInHeader}>
@@ -237,7 +237,7 @@ const makeStyles = (colors: ReturnType<typeof import('../context/ThemeContext').
             width: 120,
             height: 120,
             borderRadius: 10,
-            backgroundColor: 'rgba(255,255,255,0.26)',
+            backgroundColor: colors.glassBg,
             justifyContent: 'center',
             alignItems: 'center',
             marginBottom: 5,
@@ -275,7 +275,7 @@ const makeStyles = (colors: ReturnType<typeof import('../context/ThemeContext').
             paddingHorizontal: 32,
             borderRadius: 14,
             borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.38)',
+            borderColor: colors.glassBorder,
         },
         inviteButtonText: { color: colors.surface, fontSize: 16, fontWeight: 'bold' },
     });

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { COLORS } from '../constants/colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
 import { goalService } from '../services/goalService';
@@ -9,6 +10,8 @@ import { Goal } from '../types';
 
 const AcceptInviteScreen = () => {
     const { receivedInvites, acceptInvite } = useApp();
+    const { colors } = useTheme();
+    const styles = useMemo(() => makeStyles(colors), [colors]);
     const [loading, setLoading] = useState(false);
     const [partnerGoal, setPartnerGoal] = useState<Goal | null>(null);
 
@@ -39,13 +42,15 @@ const AcceptInviteScreen = () => {
     if (!pendingInvite) {
         return (
             <SafeAreaView style={styles.container}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
+                <LinearGradient colors={colors.backgroundGradient} style={StyleSheet.absoluteFillObject} />
+                <ActivityIndicator size="large" color={colors.primary} />
             </SafeAreaView>
         );
     }
 
     return (
         <SafeAreaView style={styles.container}>
+            <LinearGradient colors={colors.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <View style={styles.content}>
                 <View style={styles.iconContainer}>
                     <Text style={styles.emoji}>🤝</Text>
@@ -81,7 +86,7 @@ const AcceptInviteScreen = () => {
                     disabled={loading}
                 >
                     {loading ? (
-                        <ActivityIndicator color={COLORS.surface} />
+                        <ActivityIndicator color={colors.surface} />
                     ) : (
                         <Text style={styles.acceptButtonText}>Accept Invitation</Text>
                     )}
@@ -95,41 +100,42 @@ const AcceptInviteScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.background },
+const makeStyles = (colors: ReturnType<typeof import('../context/ThemeContext').useTheme>['colors']) =>
+    StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
     content: { flex: 1, padding: 20, alignItems: 'center', justifyContent: 'center' },
     iconContainer: {
         width: 80, height: 80, borderRadius: 40,
-        backgroundColor: COLORS.surface,
+        backgroundColor: colors.surface,
         alignItems: 'center', justifyContent: 'center',
         marginBottom: 20,
         shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
     },
     emoji: { fontSize: 40 },
-    title: { fontSize: 28, fontWeight: 'bold', color: COLORS.text, marginBottom: 30, textAlign: 'center' },
+    title: { fontSize: 28, fontWeight: 'bold', color: colors.text, marginBottom: 30, textAlign: 'center' },
     card: {
-        backgroundColor: COLORS.surface, padding: 25, borderRadius: 15,
+        backgroundColor: colors.surface, padding: 25, borderRadius: 15,
         width: '100%', alignItems: 'center', marginBottom: 30,
         shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
     },
-    description: { fontSize: 16, color: COLORS.text, textAlign: 'center', lineHeight: 24 },
+    description: { fontSize: 16, color: colors.text, textAlign: 'center', lineHeight: 24 },
     divider: { height: 1, backgroundColor: '#EEEEEE', width: '100%', marginVertical: 15 },
-    subtitle: { fontSize: 14, color: COLORS.secondary, marginBottom: 5 },
-    goalTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.text, textAlign: 'center' },
-    goalDescription: { fontSize: 14, color: COLORS.secondary, textAlign: 'center', marginTop: 6 },
+    subtitle: { fontSize: 14, color: colors.secondary, marginBottom: 5 },
+    goalTitle: { fontSize: 18, fontWeight: 'bold', color: colors.text, textAlign: 'center' },
+    goalDescription: { fontSize: 14, color: colors.secondary, textAlign: 'center', marginTop: 6 },
     bold: { fontWeight: 'bold' },
     acceptButton: {
-        backgroundColor: COLORS.primary, paddingVertical: 15, paddingHorizontal: 40,
+        backgroundColor: colors.primary, paddingVertical: 15, paddingHorizontal: 40,
         borderRadius: 10, width: '100%', alignItems: 'center',
-        shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 4 },
+        shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3, shadowRadius: 5, elevation: 4,
     },
     disabledButton: { opacity: 0.7 },
-    acceptButtonText: { color: COLORS.surface, fontSize: 18, fontWeight: 'bold' },
+    acceptButtonText: { color: colors.surface, fontSize: 18, fontWeight: 'bold' },
     logoutButton: { marginTop: 20, padding: 10 },
-    logoutText: { color: COLORS.secondary, fontSize: 16, fontWeight: 'bold', textDecorationLine: 'underline' },
+    logoutText: { color: colors.secondary, fontSize: 16, fontWeight: 'bold', textDecorationLine: 'underline' },
 });
 
 export default AcceptInviteScreen;

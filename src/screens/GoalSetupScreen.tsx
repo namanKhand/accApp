@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboard, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../constants/colors';
+import { useTheme } from '../context/ThemeContext';
+import { LinearGradient } from 'expo-linear-gradient';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +15,8 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'GoalSetup'>
 const GoalSetupScreen = () => {
     const navigation = useNavigation<NavigationProp>();
     const { addGoal, updateGoal, user, goals } = useApp();
+    const { colors } = useTheme();
+    const styles = useMemo(() => makeStyles(colors), [colors]);
 
     const existingGoal = useMemo(() =>
         goals.filter(g => g.ownerId === user?.id && g.status === 'active')
@@ -124,7 +127,7 @@ const GoalSetupScreen = () => {
                     <View style={styles.stepContainer}>
                         <View style={styles.headerRow}>
                             <TouchableOpacity onPress={() => setStep(step - 1)}>
-                                <MaterialCommunityIcons name="chevron-left" size={30} color={COLORS.text} />
+                                <MaterialCommunityIcons name="chevron-left" size={30} color={colors.text} />
                             </TouchableOpacity>
                             <Text style={styles.stepTitle}>Action Input</Text>
                             <View style={{ width: 30 }} />
@@ -135,7 +138,7 @@ const GoalSetupScreen = () => {
                             <TextInput
                                 style={styles.input}
                                 placeholder="type here (e.g. workout for 47 minutes)"
-                                placeholderTextColor={COLORS.secondary}
+                                placeholderTextColor={colors.secondary}
                                 value={action}
                                 onChangeText={setAction}
                                 multiline
@@ -154,7 +157,7 @@ const GoalSetupScreen = () => {
                     <View style={styles.stepContainer}>
                         <View style={styles.headerRow}>
                             <TouchableOpacity onPress={() => setStep(step - 1)}>
-                                <MaterialCommunityIcons name="chevron-left" size={30} color={COLORS.text} />
+                                <MaterialCommunityIcons name="chevron-left" size={30} color={colors.text} />
                             </TouchableOpacity>
                             <Text style={styles.stepTitle}>Frequency Input</Text>
                             <View style={{ width: 30 }} />
@@ -170,7 +173,7 @@ const GoalSetupScreen = () => {
                                     <MaterialCommunityIcons
                                         name={frequency.includes(day) ? "checkbox-marked" : "checkbox-blank-outline"}
                                         size={24}
-                                        color={COLORS.text}
+                                        color={colors.text}
                                     />
                                     <Text style={styles.dayText}>{day}</Text>
                                 </TouchableOpacity>
@@ -186,7 +189,7 @@ const GoalSetupScreen = () => {
                     <View style={styles.stepContainer}>
                         <View style={styles.headerRow}>
                             <TouchableOpacity onPress={() => setStep(step - 1)}>
-                                <MaterialCommunityIcons name="chevron-left" size={30} color={COLORS.text} />
+                                <MaterialCommunityIcons name="chevron-left" size={30} color={colors.text} />
                             </TouchableOpacity>
                             <Text style={styles.stepTitle}>Motivation Input</Text>
                             <View style={{ width: 30 }} />
@@ -197,7 +200,7 @@ const GoalSetupScreen = () => {
                             <TextInput
                                 style={styles.input}
                                 placeholder="type here (e.g. lose 10 lbs)"
-                                placeholderTextColor={COLORS.secondary}
+                                placeholderTextColor={colors.secondary}
                                 value={motivation}
                                 onChangeText={setMotivation}
                                 multiline
@@ -216,7 +219,7 @@ const GoalSetupScreen = () => {
                     <View style={[styles.stepContainer, { justifyContent: 'flex-start', flex: 0, width: '100%' }]}>
                         <View style={styles.headerRow}>
                             <TouchableOpacity onPress={() => setStep(step - 1)}>
-                                <MaterialCommunityIcons name="chevron-left" size={30} color={COLORS.text} />
+                                <MaterialCommunityIcons name="chevron-left" size={30} color={colors.text} />
                             </TouchableOpacity>
                             <Text style={styles.stepTitle}>Deadline Input</Text>
                             <View style={{ width: 30 }} />
@@ -228,21 +231,21 @@ const GoalSetupScreen = () => {
                                 onDayPress={(day: any) => setDeadline(day.dateString)}
                                 minDate={new Date().toISOString().split('T')[0]}
                                 markedDates={{
-                                    [deadline]: { selected: true, disableTouchEvent: true, selectedColor: COLORS.primary }
+                                    [deadline]: { selected: true, disableTouchEvent: true, selectedColor: colors.primary }
                                 }}
                                 theme={{
                                     backgroundColor: '#ffffff',
                                     calendarBackground: '#ffffff',
                                     textSectionTitleColor: '#b6c1cd',
-                                    selectedDayBackgroundColor: COLORS.primary,
+                                    selectedDayBackgroundColor: colors.primary,
                                     selectedDayTextColor: '#ffffff',
-                                    todayTextColor: COLORS.primary,
+                                    todayTextColor: colors.primary,
                                     dayTextColor: '#2d4150',
                                     textDisabledColor: '#d9e1e8',
                                     dotColor: '#00adf5',
                                     selectedDotColor: '#ffffff',
-                                    arrowColor: COLORS.primary,
-                                    monthTextColor: COLORS.text,
+                                    arrowColor: colors.primary,
+                                    monthTextColor: colors.text,
                                     indicatorColor: 'blue',
                                     textDayFontFamily: 'System',
                                     textMonthFontFamily: 'System',
@@ -261,7 +264,7 @@ const GoalSetupScreen = () => {
                             <MaterialCommunityIcons
                                 name={deadline === '' ? "checkbox-marked" : "checkbox-blank-outline"}
                                 size={24}
-                                color={COLORS.text}
+                                color={colors.text}
                             />
                             <Text style={styles.skipCheckboxText}>Skip for now</Text>
                         </TouchableOpacity>
@@ -284,7 +287,7 @@ const GoalSetupScreen = () => {
                             disabled={saving}
                         >
                             {saving ? (
-                                <ActivityIndicator color={COLORS.surface} />
+                                <ActivityIndicator color={colors.surface} />
                             ) : (
                                 <Text style={styles.buttonText}>Next {'>'}</Text>
                             )}
@@ -298,6 +301,7 @@ const GoalSetupScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <LinearGradient colors={colors.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <View style={styles.progressBar}>
                 <View style={[styles.progressFill, { width: `${(step / 4) * 100}%` }]} />
             </View>
@@ -308,10 +312,11 @@ const GoalSetupScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.background },
+const makeStyles = (colors: ReturnType<typeof import('../context/ThemeContext').useTheme>['colors']) =>
+    StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
     progressBar: { height: 5, backgroundColor: '#E0E0E0', width: '100%' },
-    progressFill: { height: '100%', backgroundColor: COLORS.primary },
+    progressFill: { height: '100%', backgroundColor: colors.primary },
     content: { flexGrow: 1, padding: 20 },
     stepContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     headerRow: {
@@ -321,45 +326,45 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 20,
     },
-    title: { fontSize: 24, fontWeight: 'bold', color: COLORS.text, marginBottom: 20, textAlign: 'center' },
-    stepTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text },
-    description: { fontSize: 16, color: COLORS.text, textAlign: 'center', marginBottom: 40, lineHeight: 24 },
-    label: { fontSize: 16, color: COLORS.text, marginBottom: 20, textAlign: 'center' },
-    madLibContainer: { width: '100%', backgroundColor: COLORS.surface, padding: 20, borderRadius: 15, marginBottom: 30 },
-    madLibText: { fontSize: 16, color: COLORS.text, marginBottom: 10, fontWeight: 'bold' },
+    title: { fontSize: 24, fontWeight: 'bold', color: colors.text, marginBottom: 20, textAlign: 'center' },
+    stepTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text },
+    description: { fontSize: 16, color: colors.text, textAlign: 'center', marginBottom: 40, lineHeight: 24 },
+    label: { fontSize: 16, color: colors.text, marginBottom: 20, textAlign: 'center' },
+    madLibContainer: { width: '100%', backgroundColor: colors.surface, padding: 20, borderRadius: 15, marginBottom: 30 },
+    madLibText: { fontSize: 16, color: colors.text, marginBottom: 10, fontWeight: 'bold' },
     input: {
-        backgroundColor: COLORS.surface,
+        backgroundColor: colors.surface,
         borderRadius: 10,
         padding: 15,
         fontSize: 16,
-        color: COLORS.text,
+        color: colors.text,
         borderWidth: 1,
-        borderColor: COLORS.secondary,
+        borderColor: colors.secondary,
         width: '100%',
         marginBottom: 20,
     },
-    button: { backgroundColor: COLORS.primary, paddingVertical: 12, paddingHorizontal: 40, borderRadius: 8, marginTop: 20, minWidth: 120, alignItems: 'center' },
+    button: { backgroundColor: colors.primary, paddingVertical: 12, paddingHorizontal: 40, borderRadius: 8, marginTop: 20, minWidth: 120, alignItems: 'center' },
     disabledButton: { opacity: 0.6 },
-    buttonText: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },
+    buttonText: { color: colors.surface, fontSize: 16, fontWeight: 'bold' },
     skipButton: { marginTop: 20 },
-    skipButtonText: { color: COLORS.text, fontSize: 14, textDecorationLine: 'underline' },
-    daysContainer: { width: '100%', backgroundColor: COLORS.surface, padding: 20, borderRadius: 15, marginBottom: 30 },
+    skipButtonText: { color: colors.text, fontSize: 14, textDecorationLine: 'underline' },
+    daysContainer: { width: '100%', backgroundColor: colors.surface, padding: 20, borderRadius: 15, marginBottom: 30 },
     checkboxRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
-    dayText: { marginLeft: 10, fontSize: 16, color: COLORS.text },
+    dayText: { marginLeft: 10, fontSize: 16, color: colors.text },
     calendarContainer: { width: '100%', borderRadius: 15, overflow: 'hidden', marginBottom: 20 },
     skipCheckbox: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.surface,
+        backgroundColor: colors.surface,
         padding: 15,
         borderRadius: 10,
         width: '100%',
         marginBottom: 20,
     },
-    skipCheckboxText: { marginLeft: 10, color: COLORS.text, fontSize: 16 },
-    summaryCard: { backgroundColor: COLORS.surface, padding: 20, borderRadius: 15, marginBottom: 20, width: '100%' },
-    summaryText: { fontSize: 16, color: COLORS.text, lineHeight: 24, textAlign: 'center', marginBottom: 10 },
-    summarySubtext: { fontSize: 14, color: COLORS.text, textAlign: 'center', marginTop: 10 },
+    skipCheckboxText: { marginLeft: 10, color: colors.text, fontSize: 16 },
+    summaryCard: { backgroundColor: colors.surface, padding: 20, borderRadius: 15, marginBottom: 20, width: '100%' },
+    summaryText: { fontSize: 16, color: colors.text, lineHeight: 24, textAlign: 'center', marginBottom: 10 },
+    summarySubtext: { fontSize: 14, color: colors.text, textAlign: 'center', marginTop: 10 },
     bold: { fontWeight: 'bold' },
 });
 

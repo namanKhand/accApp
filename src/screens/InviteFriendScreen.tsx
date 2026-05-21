@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboard, ActivityIndicator, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import emailjs from '@emailjs/react-native';
-import { COLORS } from '../constants/colors';
+import { useTheme } from '../context/ThemeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -20,6 +20,8 @@ const EMAILJS_PUBLIC_KEY  = 'IVGtOgXEO_-HeKb7C';
 const InviteFriendScreen = () => {
     const { user, goals, sendInvite } = useApp();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const { colors } = useTheme();
+    const styles = useMemo(() => makeStyles(colors), [colors]);
     const [step, setStep] = useState(0);
     const [friendName, setFriendName] = useState('');
     const [friendEmail, setFriendEmail] = useState('');
@@ -90,7 +92,7 @@ const InviteFriendScreen = () => {
                         <TextInput
                             style={styles.input}
                             placeholder="First Name"
-                            placeholderTextColor={COLORS.secondary}
+                            placeholderTextColor={colors.secondary}
                             value={friendName}
                             onChangeText={setFriendName}
                             returnKeyType="done"
@@ -104,7 +106,7 @@ const InviteFriendScreen = () => {
                         <TextInput
                             style={styles.input}
                             placeholder="email@example.com"
-                            placeholderTextColor={COLORS.secondary}
+                            placeholderTextColor={colors.secondary}
                             value={friendEmail}
                             onChangeText={setFriendEmail}
                             keyboardType="email-address"
@@ -132,7 +134,7 @@ const InviteFriendScreen = () => {
                 <View style={styles.content}>
                     <View style={styles.headerRow}>
                         <TouchableOpacity onPress={() => setStep(0)}>
-                            <MaterialCommunityIcons name="chevron-left" size={30} color={COLORS.text} />
+                            <MaterialCommunityIcons name="chevron-left" size={30} color={colors.text} />
                         </TouchableOpacity>
                         <Text style={styles.title}>Confirm Invite</Text>
                         <View style={{ width: 30 }} />
@@ -162,7 +164,7 @@ const InviteFriendScreen = () => {
                         disabled={loading}
                     >
                         {loading ? (
-                            <ActivityIndicator color={COLORS.surface} />
+                            <ActivityIndicator color={colors.surface} />
                         ) : (
                             <Text style={styles.buttonText}>Send Invite!</Text>
                         )}
@@ -174,7 +176,7 @@ const InviteFriendScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <LinearGradient colors={COLORS.backgroundGradient} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={colors.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {renderContent()}
             </ScrollView>
@@ -182,10 +184,11 @@ const InviteFriendScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof import('../context/ThemeContext').useTheme>['colors']) =>
+    StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
+        backgroundColor: colors.background,
     },
     scrollContent: {
         flexGrow: 1,
@@ -206,12 +209,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: COLORS.text,
+        color: colors.text,
         marginBottom: 10,
     },
     description: {
         fontSize: 16,
-        color: COLORS.secondary,
+        color: colors.secondary,
         textAlign: 'center',
         marginBottom: 30,
         lineHeight: 24,
@@ -222,20 +225,20 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 16,
-        color: COLORS.text,
+        color: colors.text,
         marginBottom: 8,
         fontWeight: '500',
         alignSelf: 'flex-start',
     },
     input: {
-        backgroundColor: COLORS.glassBgStrong,
+        backgroundColor: colors.glassBgStrong,
         borderRadius: 14,
         borderWidth: 1.5,
-        borderColor: COLORS.glassBorderStrong,
+        borderColor: colors.glassBorderStrong,
         padding: 15,
         fontSize: 16,
-        color: COLORS.text,
-        shadowColor: COLORS.primaryDark,
+        color: colors.text,
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.08,
         shadowRadius: 6,
@@ -243,33 +246,33 @@ const styles = StyleSheet.create({
     },
     helperText: {
         fontSize: 12,
-        color: COLORS.secondary,
+        color: colors.secondary,
         marginTop: 8,
         fontStyle: 'italic',
     },
     button: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         paddingVertical: 13,
         paddingHorizontal: 40,
         borderRadius: 14,
         marginTop: 20,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.38)',
-        shadowColor: COLORS.primaryDark,
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 5 },
         shadowOpacity: 0.35,
         shadowRadius: 10,
         elevation: 5,
     },
     sendButton: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         paddingVertical: 15,
         paddingHorizontal: 50,
         borderRadius: 14,
         marginTop: 20,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.38)',
-        shadowColor: COLORS.primaryDark,
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 5 },
         shadowOpacity: 0.38,
         shadowRadius: 10,
@@ -279,19 +282,19 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
     buttonText: {
-        color: COLORS.surface,
+        color: colors.surface,
         fontSize: 16,
         fontWeight: 'bold',
     },
     previewCard: {
-        backgroundColor: COLORS.glassBg,
+        backgroundColor: colors.glassBg,
         borderWidth: 1.5,
-        borderColor: COLORS.glassBorder,
+        borderColor: colors.glassBorder,
         padding: 22,
         borderRadius: 20,
         width: '100%',
         marginBottom: 28,
-        shadowColor: COLORS.primaryDark,
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.14,
         shadowRadius: 20,
@@ -299,7 +302,7 @@ const styles = StyleSheet.create({
     },
     previewText: {
         fontSize: 15,
-        color: COLORS.text,
+        color: colors.text,
         lineHeight: 22,
     },
     bold: {

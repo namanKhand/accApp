@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../constants/colors';
+import { useTheme } from '../context/ThemeContext';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -53,6 +53,8 @@ const SLIDES = [
 
 const OnboardingScreen = () => {
     const navigation = useNavigation<NavigationProp>();
+    const { colors } = useTheme();
+    const styles = useMemo(() => makeStyles(colors), [colors]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const flatListRef = useRef<FlatList>(null);
 
@@ -80,9 +82,9 @@ const OnboardingScreen = () => {
 
     const renderItem = ({ item }: { item: typeof SLIDES[0] }) => (
         <View style={styles.slide}>
-            <LinearGradient colors={['rgba(255,255,255,0.52)', 'rgba(255,255,255,0.22)']} style={styles.imageContainer}>
+            <LinearGradient colors={[colors.glassBgStrong, colors.glassBg]} style={styles.imageContainer}>
                 <View style={styles.circle}>
-                    <MaterialCommunityIcons name={item.icon as any} size={80} color={COLORS.text} />
+                    <MaterialCommunityIcons name={item.icon as any} size={80} color={colors.text} />
                 </View>
             </LinearGradient>
             <Text style={styles.title}>{item.title}</Text>
@@ -106,7 +108,7 @@ const OnboardingScreen = () => {
 
             {item.showQuote && (
                 <View style={styles.quoteContainer}>
-                    <MaterialCommunityIcons name="format-quote-open" size={24} color={COLORS.primary} />
+                    <MaterialCommunityIcons name="format-quote-open" size={24} color={colors.primary} />
                     <Text style={styles.quoteText}>{QUOTE.text}</Text>
                     <Text style={styles.quoteAuthor}>— {QUOTE.author}</Text>
                 </View>
@@ -116,10 +118,11 @@ const OnboardingScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <LinearGradient colors={colors.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <View style={styles.header}>
                 {currentIndex > 0 && (
                     <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                        <MaterialCommunityIcons name="arrow-left" size={24} color={COLORS.text} />
+                        <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
                     </TouchableOpacity>
                 )}
                 <Text style={styles.headerText}>Welcome to 2gether</Text>
@@ -161,10 +164,11 @@ const OnboardingScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ReturnType<typeof import('../context/ThemeContext').useTheme>['colors']) =>
+    StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
+        backgroundColor: colors.background,
     },
     header: {
         padding: 20,
@@ -176,7 +180,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderWidth: 1.5,
         borderColor: 'rgba(255,255,255,0.55)',
-        shadowColor: COLORS.primaryDark,
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.18,
         shadowRadius: 12,
@@ -187,7 +191,7 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     headerText: {
-        color: COLORS.text,
+        color: colors.text,
         fontSize: 18,
         fontWeight: 'bold',
     },
@@ -207,7 +211,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 36,
-        shadowColor: COLORS.primaryDark,
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 16 },
         shadowOpacity: 0.18,
         shadowRadius: 28,
@@ -226,7 +230,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: COLORS.text,
+        color: colors.text,
         textAlign: 'center',
         paddingHorizontal: 20,
         marginBottom: 20,
@@ -239,15 +243,15 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     statCard: {
-        backgroundColor: COLORS.glassBg,
+        backgroundColor: colors.glassBg,
         padding: 15,
         borderRadius: 16,
         alignItems: 'center',
         flex: 1,
         marginHorizontal: 5,
         borderWidth: 1.5,
-        borderColor: COLORS.glassBorder,
-        shadowColor: COLORS.primaryDark,
+        borderColor: colors.glassBorder,
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.14,
         shadowRadius: 12,
@@ -256,23 +260,23 @@ const styles = StyleSheet.create({
     statValue: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: COLORS.primary,
+        color: colors.primary,
         marginBottom: 5,
     },
     statLabel: {
         fontSize: 11,
-        color: COLORS.text,
+        color: colors.text,
         textAlign: 'center',
     },
     quoteContainer: {
-        backgroundColor: COLORS.glassBg,
+        backgroundColor: colors.glassBg,
         padding: 22,
         borderRadius: 20,
         marginTop: 20,
         width: '90%',
         borderWidth: 1.5,
-        borderColor: COLORS.glassBorder,
-        shadowColor: COLORS.primaryDark,
+        borderColor: colors.glassBorder,
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.14,
         shadowRadius: 16,
@@ -281,14 +285,14 @@ const styles = StyleSheet.create({
     quoteText: {
         fontSize: 18,
         fontStyle: 'italic',
-        color: COLORS.text,
+        color: colors.text,
         textAlign: 'center',
         marginVertical: 10,
         lineHeight: 26,
     },
     quoteAuthor: {
         fontSize: 14,
-        color: COLORS.primary,
+        color: colors.primary,
         textAlign: 'right',
         fontWeight: 'bold',
         marginTop: 5,
@@ -313,24 +317,24 @@ const styles = StyleSheet.create({
         marginHorizontal: 4,
     },
     activeDot: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         width: 24,
     },
     button: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         paddingVertical: 13,
         paddingHorizontal: 28,
         borderRadius: 25,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.38)',
-        shadowColor: COLORS.primaryDark,
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.35,
         shadowRadius: 8,
         elevation: 4,
     },
     buttonText: {
-        color: COLORS.surface,
+        color: colors.surface,
         fontWeight: 'bold',
         fontSize: 16,
     },

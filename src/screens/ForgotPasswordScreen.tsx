@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
     ScrollView, ActivityIndicator, Alert,
@@ -9,13 +9,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import auth from '@react-native-firebase/auth';
-import { COLORS } from '../constants/colors';
+import { useTheme } from '../context/ThemeContext';
 import { RootStackParamList } from '../navigation/RootNavigator';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ForgotPassword'>;
 
 const ForgotPasswordScreen = () => {
     const navigation = useNavigation<NavigationProp>();
+    const { colors } = useTheme();
+    const styles = useMemo(() => makeStyles(colors), [colors]);
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
@@ -50,10 +52,10 @@ const ForgotPasswordScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <LinearGradient colors={COLORS.backgroundGradient} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={colors.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <MaterialCommunityIcons name="chevron-left" size={30} color={COLORS.text} />
+                    <MaterialCommunityIcons name="chevron-left" size={30} color={colors.text} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Reset Password</Text>
                 <View style={{ width: 30 }} />
@@ -62,7 +64,7 @@ const ForgotPasswordScreen = () => {
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {sent ? (
                     <View style={styles.successContainer}>
-                        <MaterialCommunityIcons name="email-check-outline" size={64} color={COLORS.primary} />
+                        <MaterialCommunityIcons name="email-check-outline" size={64} color={colors.primary} />
                         <Text style={styles.successTitle}>Check your inbox</Text>
                         <Text style={styles.successText}>
                             We sent a password reset link to{'\n'}
@@ -90,7 +92,7 @@ const ForgotPasswordScreen = () => {
                             <TextInput
                                 style={styles.input}
                                 placeholder="example@example.com"
-                                placeholderTextColor={COLORS.secondary}
+                                placeholderTextColor={colors.secondary}
                                 value={email}
                                 onChangeText={setEmail}
                                 autoCapitalize="none"
@@ -106,7 +108,7 @@ const ForgotPasswordScreen = () => {
                             disabled={loading}
                         >
                             {loading ? (
-                                <ActivityIndicator color={COLORS.surface} />
+                                <ActivityIndicator color={colors.surface} />
                             ) : (
                                 <Text style={styles.buttonText}>Send Reset Link</Text>
                             )}
@@ -118,8 +120,9 @@ const ForgotPasswordScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.background },
+const makeStyles = (colors: ReturnType<typeof import('../context/ThemeContext').useTheme>['colors']) =>
+    StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -129,26 +132,26 @@ const styles = StyleSheet.create({
         marginHorizontal: 20,
         marginTop: 8,
         borderRadius: 22,
-        backgroundColor: COLORS.glassBg,
+        backgroundColor: colors.glassBg,
         borderWidth: 1.5,
-        borderColor: COLORS.glassBorder,
-        shadowColor: COLORS.primaryDark,
+        borderColor: colors.glassBorder,
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.10,
         shadowRadius: 8,
         elevation: 4,
     },
-    headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text, letterSpacing: 0.2 },
+    headerTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text, letterSpacing: 0.2 },
     scrollContent: { flexGrow: 1, padding: 20, justifyContent: 'center' },
     form: {
         alignItems: 'center',
         width: '100%',
-        backgroundColor: COLORS.glassBg,
+        backgroundColor: colors.glassBg,
         borderWidth: 1.5,
-        borderColor: COLORS.glassBorder,
+        borderColor: colors.glassBorder,
         borderRadius: 32,
         padding: 28,
-        shadowColor: COLORS.primaryDark,
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 20 },
         shadowOpacity: 0.18,
         shadowRadius: 32,
@@ -156,29 +159,29 @@ const styles = StyleSheet.create({
     },
     description: {
         fontSize: 15,
-        color: COLORS.secondary,
+        color: colors.secondary,
         textAlign: 'center',
         marginBottom: 30,
         lineHeight: 22,
     },
     inputContainer: { width: '100%', marginBottom: 25 },
-    label: { fontSize: 16, color: COLORS.text, marginBottom: 8, fontWeight: '500' },
+    label: { fontSize: 16, color: colors.text, marginBottom: 8, fontWeight: '500' },
     input: {
-        backgroundColor: COLORS.glassBgStrong,
+        backgroundColor: colors.glassBgStrong,
         borderRadius: 14,
         borderWidth: 1.5,
-        borderColor: COLORS.glassBorderStrong,
+        borderColor: colors.glassBorderStrong,
         padding: 15,
         fontSize: 16,
-        color: COLORS.text,
-        shadowColor: COLORS.primaryDark,
+        color: colors.text,
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.08,
         shadowRadius: 6,
         elevation: 2,
     },
     button: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         paddingVertical: 14,
         paddingHorizontal: 40,
         borderRadius: 14,
@@ -186,22 +189,22 @@ const styles = StyleSheet.create({
         minWidth: 200,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.38)',
-        shadowColor: COLORS.primaryDark,
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 5 },
         shadowOpacity: 0.35,
         shadowRadius: 10,
         elevation: 5,
     },
     disabledButton: { opacity: 0.6 },
-    buttonText: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },
+    buttonText: { color: colors.surface, fontSize: 16, fontWeight: 'bold' },
     successContainer: { alignItems: 'center', paddingTop: 20 },
-    successTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.text, marginTop: 20, marginBottom: 12 },
-    successText: { fontSize: 15, color: COLORS.secondary, textAlign: 'center', lineHeight: 22, marginBottom: 40 },
-    bold: { fontWeight: 'bold', color: COLORS.text },
+    successTitle: { fontSize: 24, fontWeight: 'bold', color: colors.text, marginTop: 20, marginBottom: 12 },
+    successText: { fontSize: 15, color: colors.secondary, textAlign: 'center', lineHeight: 22, marginBottom: 40 },
+    bold: { fontWeight: 'bold', color: colors.text },
     resendButton: { marginTop: 16 },
     secondaryButton: { marginTop: 14 },
-    secondaryButtonText: { color: COLORS.text, fontSize: 14, fontWeight: '600' },
-    resendText: { color: COLORS.primary, fontSize: 14, textDecorationLine: 'underline' },
+    secondaryButtonText: { color: colors.text, fontSize: 14, fontWeight: '600' },
+    resendText: { color: colors.primary, fontSize: 14, textDecorationLine: 'underline' },
 });
 
 export default ForgotPasswordScreen;

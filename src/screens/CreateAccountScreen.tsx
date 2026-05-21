@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
     ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../constants/colors';
+import { useTheme } from '../context/ThemeContext';
+import { LinearGradient } from 'expo-linear-gradient';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,6 +16,8 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateAccou
 
 const CreateAccountScreen = () => {
     const navigation = useNavigation<NavigationProp>();
+    const { colors } = useTheme();
+    const styles = useMemo(() => makeStyles(colors), [colors]);
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -57,9 +60,10 @@ const CreateAccountScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <LinearGradient colors={colors.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <MaterialCommunityIcons name="chevron-left" size={30} color={COLORS.text} />
+                    <MaterialCommunityIcons name="chevron-left" size={30} color={colors.text} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Create Account</Text>
                 <View style={{ width: 30 }} />
@@ -72,7 +76,7 @@ const CreateAccountScreen = () => {
                         <TextInput
                             style={styles.input}
                             placeholder="First Name Last Name"
-                            placeholderTextColor={COLORS.secondary}
+                            placeholderTextColor={colors.secondary}
                             value={fullName}
                             onChangeText={setFullName}
                         />
@@ -83,7 +87,7 @@ const CreateAccountScreen = () => {
                         <TextInput
                             style={styles.input}
                             placeholder="email@example.com"
-                            placeholderTextColor={COLORS.secondary}
+                            placeholderTextColor={colors.secondary}
                             value={email}
                             onChangeText={setEmail}
                             autoCapitalize="none"
@@ -97,7 +101,7 @@ const CreateAccountScreen = () => {
                         <TextInput
                             style={styles.input}
                             placeholder="At least 6 characters"
-                            placeholderTextColor={COLORS.secondary}
+                            placeholderTextColor={colors.secondary}
                             value={password}
                             onChangeText={setPassword}
                             secureTextEntry
@@ -109,7 +113,7 @@ const CreateAccountScreen = () => {
                         <TextInput
                             style={styles.input}
                             placeholder="**********"
-                            placeholderTextColor={COLORS.secondary}
+                            placeholderTextColor={colors.secondary}
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
                             secureTextEntry
@@ -120,7 +124,7 @@ const CreateAccountScreen = () => {
                         <MaterialCommunityIcons
                             name={agreed ? 'checkbox-marked' : 'checkbox-blank-outline'}
                             size={24}
-                            color={COLORS.text}
+                            color={colors.text}
                         />
                         <Text style={styles.checkboxText}>
                             By checking the box, you agree to the Terms of Use and Privacy Policy
@@ -133,7 +137,7 @@ const CreateAccountScreen = () => {
                         disabled={loading}
                     >
                         {loading ? (
-                            <ActivityIndicator color={COLORS.surface} />
+                            <ActivityIndicator color={colors.surface} />
                         ) : (
                             <Text style={styles.signUpButtonText}>Sign Up</Text>
                         )}
@@ -144,8 +148,9 @@ const CreateAccountScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.background },
+const makeStyles = (colors: ReturnType<typeof import('../context/ThemeContext').useTheme>['colors']) =>
+    StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -153,17 +158,17 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 10,
     },
-    headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text },
+    headerTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text },
     scrollContent: { padding: 20 },
     form: { alignItems: 'center' },
     inputContainer: { width: '100%', marginBottom: 20 },
-    label: { fontSize: 16, color: COLORS.text, marginBottom: 8, fontWeight: '500' },
+    label: { fontSize: 16, color: colors.text, marginBottom: 8, fontWeight: '500' },
     input: {
-        backgroundColor: COLORS.surface,
+        backgroundColor: colors.surface,
         borderRadius: 10,
         padding: 15,
         fontSize: 16,
-        color: COLORS.text,
+        color: colors.text,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -176,9 +181,9 @@ const styles = StyleSheet.create({
         marginBottom: 30,
         width: '100%',
     },
-    checkboxText: { marginLeft: 10, color: COLORS.text, fontSize: 14, flex: 1 },
+    checkboxText: { marginLeft: 10, color: colors.text, fontSize: 14, flex: 1 },
     signUpButton: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         paddingVertical: 12,
         paddingHorizontal: 40,
         borderRadius: 8,
@@ -187,7 +192,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     disabledButton: { opacity: 0.6 },
-    signUpButtonText: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },
+    signUpButtonText: { color: colors.surface, fontSize: 16, fontWeight: 'bold' },
 });
 
 export default CreateAccountScreen;
