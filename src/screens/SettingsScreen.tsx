@@ -1,11 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Switch } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS } from '../constants/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, ThemeMode, THEME_LABELS } from '../context/ThemeContext';
 import { authService } from '../services/authService';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,46 +12,74 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+const THEME_ICONS: Record<ThemeMode, string> = {
+    'light':        'white-balance-sunny',
+    'warm-night':   'weather-night',
+    'midnight':     'moon-waning-crescent',
+    'deep-purple':  'star-four-points',
+};
+
 const SettingsScreen = () => {
     const { user } = useApp();
-    const { isDark, toggleTheme, colors } = useTheme();
+    const { mode, setMode, colors } = useTheme();
     const navigation = useNavigation<NavigationProp>();
+    const styles = useMemo(() => makeStyles(colors), [colors]);
 
     const handleLogout = () => {
-        Alert.alert(
-            "Log Out",
-            "Are you sure you want to log out?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Log Out",
-                    style: "destructive",
-                    onPress: async () => {
-                        await authService.signOut();
-                        // onAuthStateChanged in AppContext clears the user and the navigator redirects
-                    }
-                }
-            ]
-        );
+        Alert.alert('Log Out', 'Are you sure you want to log out?', [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Log Out', style: 'destructive', onPress: () => authService.signOut() },
+        ]);
     };
 
-    const SettingItem = ({ icon, title, onPress, value }: { icon: any, title: string, onPress?: () => void, value?: string }) => (
+    const SettingItem = ({ icon, title, onPress, value }: {
+        icon: string; title: string; onPress?: () => void; value?: string;
+    }) => (
         <TouchableOpacity style={styles.settingItem} onPress={onPress} disabled={!onPress}>
             <View style={styles.settingLeft}>
                 <View style={styles.iconContainer}>
-                    <MaterialCommunityIcons name={icon} size={24} color={COLORS.primary} />
+                    <MaterialCommunityIcons name={icon as any} size={24} color={colors.primary} />
                 </View>
                 <Text style={styles.settingTitle}>{title}</Text>
             </View>
             <View style={styles.settingRight}>
-                {value && <Text style={styles.settingValue}>{value}</Text>}
-                {onPress && <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.secondary} />}
+                {value ? <Text style={styles.settingValue}>{value}</Text> : null}
+                {onPress ? <MaterialCommunityIcons name="chevron-right" size={24} color={colors.secondary} /> : null}
             </View>
         </TouchableOpacity>
     );
 
+    const ThemePicker = () => (
+        <View style={styles.themePickerContainer}>
+            <View style={styles.settingLeft}>
+                <View style={styles.iconContainer}>
+                    <MaterialCommunityIcons name="palette-outline" size={24} color={colors.primary} />
+                </View>
+                <Text style={styles.settingTitle}>Theme</Text>
+            </View>
+            <View style={styles.themeOptions}>
+                {(['light', 'warm-night', 'midnight', 'deep-purple'] as ThemeMode[]).map(m => (
+                    <TouchableOpacity
+                        key={m}
+                        style={[styles.themeChip, mode === m && styles.themeChipActive]}
+                        onPress={() => setMode(m)}
+                    >
+                        <MaterialCommunityIcons
+                            name={THEME_ICONS[m] as any}
+                            size={14}
+                            color={mode === m ? colors.surface : colors.secondary}
+                        />
+                        <Text style={[styles.themeChipText, mode === m && styles.themeChipTextActive]}>
+                            {THEME_LABELS[m]}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+        </View>
+    );
+
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView style={styles.container}>
             <LinearGradient colors={colors.backgroundGradient} style={StyleSheet.absoluteFillObject} />
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Settings</Text>
@@ -61,16 +88,8 @@ const SettingsScreen = () => {
             <ScrollView contentContainerStyle={styles.content}>
                 <Text style={styles.sectionHeader}>Account</Text>
                 <View style={styles.section}>
-                    <SettingItem
-                        icon="account-circle-outline"
-                        title="Name"
-                        value={user?.displayName || 'User'}
-                    />
-                    <SettingItem
-                        icon="email-outline"
-                        title="Email"
-                        value={user?.email || 'user@example.com'}
-                    />
+                    <SettingItem icon="account-circle-outline" title="Name" value={user?.displayName || 'User'} />
+                    <SettingItem icon="email-outline" title="Email" value={user?.email || 'user@example.com'} />
                 </View>
 
                 <Text style={styles.sectionHeader}>Preferences</Text>
@@ -80,20 +99,7 @@ const SettingsScreen = () => {
                         title="Notifications"
                         onPress={() => Alert.alert('Coming Soon', 'Notification settings will be available soon!')}
                     />
-                    <TouchableOpacity style={styles.settingItem} onPress={toggleTheme}>
-                        <View style={styles.settingLeft}>
-                            <View style={styles.iconContainer}>
-                                <MaterialCommunityIcons name="theme-light-dark" size={24} color={COLORS.primary} />
-                            </View>
-                            <Text style={styles.settingTitle}>Dark Mode</Text>
-                        </View>
-                        <Switch
-                            value={isDark}
-                            onValueChange={toggleTheme}
-                            trackColor={{ false: COLORS.secondary, true: COLORS.primary }}
-                            thumbColor={COLORS.surface}
-                        />
-                    </TouchableOpacity>
+                    <ThemePicker />
                 </View>
 
                 <Text style={styles.sectionHeader}>Support</Text>
@@ -120,99 +126,79 @@ const SettingsScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.background,
-    },
-    header: {
-        padding: 20,
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.50)',
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: COLORS.text,
-        letterSpacing: 0.3,
-    },
-    content: {
-        padding: 20,
-    },
-    sectionHeader: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: COLORS.secondary,
-        marginBottom: 8,
-        marginTop: 10,
-        marginLeft: 4,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-    },
-    section: {
-        backgroundColor: COLORS.glassBg,
-        borderWidth: 1.5,
-        borderColor: COLORS.glassBorder,
-        borderRadius: 20,
-        marginBottom: 20,
-        overflow: 'hidden',
-        shadowColor: COLORS.primaryDark,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
-        elevation: 4,
-    },
-    settingItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.55)',
-    },
-    settingLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    iconContainer: {
-        width: 30,
-        alignItems: 'center',
-        marginRight: 10,
-    },
-    settingTitle: {
-        fontSize: 16,
-        color: COLORS.text,
-    },
-    settingRight: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    settingValue: {
-        fontSize: 14,
-        color: COLORS.secondary,
-        marginRight: 5,
-    },
-    logoutButton: {
-        marginTop: 20,
-        backgroundColor: 'rgba(176,0,32,0.08)',
-        borderWidth: 1.5,
-        borderColor: 'rgba(176,0,32,0.18)',
-        padding: 15,
-        borderRadius: 16,
-        alignItems: 'center',
-    },
-    logoutText: {
-        color: COLORS.error,
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    versionText: {
-        textAlign: 'center',
-        color: COLORS.secondary,
-        marginTop: 20,
-        fontSize: 12,
-    },
-});
+const makeStyles = (colors: ReturnType<typeof import('../context/ThemeContext').useTheme>['colors']) =>
+    StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        header: {
+            padding: 20, alignItems: 'center', borderBottomWidth: 1,
+            borderBottomColor: colors.glassBorder,
+        },
+        headerTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text, letterSpacing: 0.3 },
+        content: { padding: 20 },
+        sectionHeader: {
+            fontSize: 12, fontWeight: 'bold', color: colors.secondary,
+            marginBottom: 8, marginTop: 10, marginLeft: 4,
+            textTransform: 'uppercase', letterSpacing: 1,
+        },
+        section: {
+            backgroundColor: colors.glassBg,
+            borderWidth: 1.5, borderColor: colors.glassBorder,
+            borderRadius: 20, marginBottom: 20, overflow: 'hidden',
+            shadowColor: colors.primaryDark, shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.12, shadowRadius: 16, elevation: 4,
+        },
+        settingItem: {
+            flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+            padding: 16, borderBottomWidth: 1, borderBottomColor: colors.glassBorder,
+        },
+        settingLeft: { flexDirection: 'row', alignItems: 'center' },
+        iconContainer: { width: 30, alignItems: 'center', marginRight: 10 },
+        settingTitle: { fontSize: 16, color: colors.text },
+        settingRight: { flexDirection: 'row', alignItems: 'center' },
+        settingValue: { fontSize: 14, color: colors.secondary, marginRight: 5 },
+
+        // Theme picker
+        themePickerContainer: {
+            padding: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.glassBorder,
+        },
+        themeOptions: {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: 8,
+            marginTop: 14,
+            marginLeft: 40,
+        },
+        themeChip: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 5,
+            paddingHorizontal: 12,
+            paddingVertical: 7,
+            borderRadius: 20,
+            borderWidth: 1.5,
+            borderColor: colors.glassBorder,
+            backgroundColor: colors.glassBg,
+        },
+        themeChipActive: {
+            backgroundColor: colors.primary,
+            borderColor: colors.primary,
+        },
+        themeChipText: { fontSize: 12, fontWeight: '600', color: colors.secondary },
+        themeChipTextActive: { color: colors.surface },
+
+        logoutButton: {
+            marginTop: 20,
+            backgroundColor: 'rgba(176,0,32,0.08)',
+            borderWidth: 1.5,
+            borderColor: 'rgba(176,0,32,0.18)',
+            padding: 15,
+            borderRadius: 16,
+            alignItems: 'center',
+        },
+        logoutText: { color: colors.error, fontWeight: 'bold', fontSize: 16 },
+        versionText: { textAlign: 'center', color: colors.secondary, marginTop: 20, fontSize: 12 },
+    });
 
 export default SettingsScreen;
