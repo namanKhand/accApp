@@ -19,7 +19,9 @@
       "usesAppleSignIn": true
     },
     "plugins": [
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
     ],
     "android": {
       "adaptiveIcon": {

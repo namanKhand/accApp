@@ -11,3 +11,11 @@ yarn-error.log
 *.mobileprovision
 *.orig.*
 web-build/
+
+# Firebase — contains API keys, shared separately
+ios/do2gether/GoogleService-Info.plist
+google-services.json
+
+# Xcode build outputs
+ios/build/
+ios/build-release/

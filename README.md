@@ -6,6 +6,10 @@ A social habit-building platform that helps people stay consistent with their pe
 
 Everything is configured for our new brand, **do2gether**, under the identifier `com.acc.2gether`.
 
+### Submitting to the App Store (Sean)
+
+See **[SEAN_SUBMISSION_GUIDE.md](SEAN_SUBMISSION_GUIDE.md)** for step-by-step instructions to build and submit to App Store Connect using your paid Apple Developer account.
+
 ### New Documentation
 We have prepared exhaustive guides for the store submission and Firebase migration:
 - [Store Readiness Report](docs/store_readiness_report.md): Technical requirements and roadmap.

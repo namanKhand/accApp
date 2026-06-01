@@ -4,6 +4,8 @@
   <dict>
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
+    <key>CFBundleAllowMixedLocalizations</key>
+    <true/>
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
@@ -31,9 +33,20 @@
           <string>com.acc.2gether</string>
         </array>
       </dict>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>exp+do2gether</string>
+        </array>
+      </dict>
     </array>
     <key>CFBundleVersion</key>
     <string>1</string>
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+      <string>googlegmail</string>
+      <string>mailto</string>
+    </array>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
     <key>LSRequiresIPhoneOS</key>
@@ -47,6 +60,10 @@
     </dict>
     <key>NSCameraUsageDescription</key>
     <string>do2gether uses your camera to capture before-and-after check-in photos that prove you completed your accountability goals.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>do2gether uses your microphone when recording check-in videos to prove you completed your accountability goals.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>do2gether uses your photo library to upload existing photos as check-in proof for your accountability goals.</string>
     <key>RCTNewArchEnabled</key>
     <true/>
     <key>UILaunchStoryboardName</key>
@@ -75,10 +92,5 @@
     <string>Automatic</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
-    <key>LSApplicationQueriesSchemes</key>
-    <array>
-      <string>googlegmail</string>
-      <string>mailto</string>
-    </array>
   </dict>
 </plist>
