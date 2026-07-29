@@ -48,3 +48,8 @@ The `docs` folder contains the product and engineering write-ups behind the buil
 ## Tech
 
 React Native, Expo, TypeScript, React Navigation, React Context, ESLint, EAS Build, Firebase (planned).
+
+
+## Team
+
+Built by [@shreyakoli18](https://github.com/shreyakoli18), [@namanKhand](https://github.com/namanKhand), and [@Taran132g](https://github.com/Taran132g).
