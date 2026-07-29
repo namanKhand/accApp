@@ -1,52 +1,50 @@
-# do2gether: Social Accountability App
+# do2gether
 
-A social habit-building platform that helps people stay consistent with their personal goals by involving accountability partners. Users set structured goals, check in daily with photo proof, build streaks, and rely on partners to nudge them when they miss a check-in.
+A social accountability app for building habits. You set a goal, check in every day with photo proof, and an accountability partner you invite sees your streak and nudges you when you miss a day. Built with React Native, Expo, and TypeScript.
 
-## Project Status: **Ready for Store Submission**
+## The idea
 
-Everything is configured for our new brand, **do2gether**, under the identifier `com.acc.2gether`.
+Habit trackers are easy to abandon because nobody notices when you stop. do2gether puts a real person on the other side of the streak: check-ins are visible to a partner, and a missed day triggers a nudge from that partner rather than another push notification from an app.
 
-### Submitting to the App Store (Sean)
+## Features
 
-See **[SEAN_SUBMISSION_GUIDE.md](SEAN_SUBMISSION_GUIDE.md)** for step-by-step instructions to build and submit to App Store Connect using your paid Apple Developer account.
+| Area | What it does |
+| --- | --- |
+| Onboarding | Guided first-run flow with profile setup |
+| Accounts | Sign up, log in, password reset, and account recovery screens |
+| Goals | Structured goal creation with cadence and target |
+| Partners | Invite a partner by link, plus an accept-invite and waiting-for-partner flow |
+| Check-ins | Daily check-in with a photo taken or picked from the device |
+| Streaks | Home dashboard and a calendar view of streak history |
+| Nudges | Inbox of nudges received and a sender for nudging a partner |
+| Settings | Theme, profile, support contact, and sign-out |
 
-### New Documentation
-We have prepared exhaustive guides for the store submission and Firebase migration:
-- [Store Readiness Report](docs/store_readiness_report.md): Technical requirements and roadmap.
-- [Submission Metadata](docs/submission_metadata.md): Copy-pasteable store listing text.
-- [Privacy Policy & Terms](docs/legal_drafts.md): Finalized legal drafts for the store.
-- [Firebase Implementation Plan](docs/firebase_implementation_plan.md): Guide for transitioning to live production cloud.
+## Architecture
 
----
+One Expo React Native project written entirely in TypeScript.
 
-## Repo Contents
-- `docs/` — product vision, feature scope, architecture, plans, and flows.
-- `src/` — React Native (Expo) source for the mobile app.
-- `assets/` — placeholder assets (replace with your exported icons and splash art).
+| Layer | Location | Contents |
+| --- | --- | --- |
+| Screens | `src/screens` | Fourteen screens spanning onboarding, auth, goal setup, invites, home, friends, and settings |
+| Components | `src/components` | Reusable UI including goal cards, check-in cards, the streak calendar, and the nudge button |
+| Navigation | `src/navigation` | A root stack wrapping a bottom-tab navigator |
+| State | `src/context` | Application state and theming through React context |
+| Services | `src/services` | Auth, goals, check-ins, invites, notifications, and Firebase configuration |
 
-## Running the app
-1. Install dependencies (Node 18+ recommended):
-   ```bash
-   npm install
-   ```
-2. Start the Expo dev server:
-   ```bash
-   npm start
-   ```
-3. Launch on a device or simulator from the Expo CLI output.
+Every data operation goes through a module in `src/services`, so the UI has no knowledge of the backend behind it. The current build ships in-memory mock services, which means the whole app is explorable with no backend running; switching to Firebase means changing those service files and nothing else.
 
-## Firebase configuration
-Set your Firebase credentials in `src/services/firebase.ts`. The current build uses mock in-memory services for auth, goals, check-ins, and nudges so you can explore the UI without a backend. Replace the mock services with Firebase SDK calls once your project is configured.
+## Status
 
-## Included flows
-- Onboarding
-- Phone login (mocked) and profile context
-- Goal creation
-- Partner invite placeholder
-- Home dashboard with streak progress and nudge shortcuts
-- Check-in with photo upload (local picker)
-- Streak calendar visualization
-- Nudge inbox and reminder sender
-- Profile screen with sign-out
+The interface, navigation, and all flows listed above are working against the mock services. Firebase credentials belong in `src/services/firebase.ts`, and `docs/firebase_implementation_plan.md` sets out the migration from mocks to live data.
 
-See the `docs/` folder for detailed plans and specifications.
+## Running it locally
+
+Node 18 or newer is recommended. Install dependencies with `npm install`, start the Expo dev server with `npm start`, then open the app in Expo Go on a physical device or launch a simulator from the Expo CLI output. The icons and splash art in `assets` are placeholders.
+
+## Documentation
+
+The `docs` folder contains the product and engineering write-ups behind the build: product vision, feature scope, architecture, data models, user flows, UI screens, competitive analysis, and the project plan.
+
+## Tech
+
+React Native, Expo, TypeScript, React Navigation, React Context, ESLint, EAS Build, Firebase (planned).
